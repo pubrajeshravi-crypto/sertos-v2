@@ -1,6 +1,28 @@
 @import "tailwindcss";
 
-/* SERTOS global styles */
+@theme {
+  --color-command-canvas: #070a09;
+  --color-command-panel: #0c100f;
+  --color-command-raised: #121916;
+  --color-command-line: #29372f;
+  --color-command-cyan: #68d8c0;
+  --color-command-emerald: #63e6a3;
+  --color-command-amber: #e9bd7a;
+  --color-command-text: #e8f0ea;
+  --color-command-muted: #9aa99f;
+}
+
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--color-command-canvas);
+  color: var(--color-command-text);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -10,10 +32,1536 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100%;
-  font-family: Arial, sans-serif;
 }
 
 body {
-  background: #f8fafc;
-  color: #0f172a;
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 78% 6%, rgb(16 92 61 / 20%), transparent 38%),
+    radial-gradient(ellipse at 14% 82%, rgb(16 74 75 / 14%), transparent 38%),
+    radial-gradient(ellipse at 56% 105%, rgb(115 76 35 / 9%), transparent 34%),
+    var(--color-command-canvas);
+  color: var(--color-command-text);
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tp-app,
+.hospital-app {
+  background: transparent !important;
+  color: var(--color-command-text);
+}
+
+.tp-sidebar,
+.hospital-sidebar {
+  background: rgb(8 13 10 / 91%) !important;
+  border-right: 1px solid rgb(132 177 148 / 14%);
+  backdrop-filter: blur(28px) saturate(150%);
+}
+
+.tp-brand-logo,
+.hospital-brand-icon {
+  color: var(--color-command-emerald) !important;
+}
+
+.tp-nav-link.tp-nav-active,
+.hospital-nav-link.active {
+  background: rgb(69 186 123 / 13%) !important;
+  box-shadow: inset 2px 0 var(--color-command-emerald), 0 0 24px rgb(49 193 112 / 7%) !important;
+  color: #c1f3d4 !important;
+}
+
+.tp-main,
+.hospital-main {
+  background: transparent !important;
+}
+
+.tp-main-content,
+.hospital-content {
+  max-width: 1600px;
+}
+
+.hospital-topbar {
+  min-height: 70px;
+  background: rgb(8 13 10 / 82%) !important;
+  border-bottom-color: rgb(132 177 148 / 16%) !important;
+  color: var(--color-command-text);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+.hospital-search,
+.hospital-info-card {
+  background: var(--color-command-panel) !important;
+  border: 1px solid rgb(128 166 197 / 16%);
+  color: var(--color-command-muted);
+}
+
+.hospital-user,
+.hospital-notification-button,
+.hospital-menu-button {
+  color: var(--color-command-text) !important;
+}
+
+.ops-command-bar {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 28px;
+  border-bottom: 1px solid rgb(132 177 148 / 13%);
+  background: rgb(8 13 10 / 78%);
+  color: var(--color-command-muted);
+  font: 600 10px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.12em;
+}
+
+.ops-command-label,
+.ops-command-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ops-command-label strong {
+  color: var(--color-command-text);
+  font-weight: 650;
+}
+
+.ops-health-dot,
+.ops-live-pulse {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--color-command-emerald);
+  box-shadow: 0 0 12px rgb(99 230 163 / 65%);
+  animation: command-pulse 1.8s ease-in-out infinite;
+}
+
+.ops-role-badge {
+  padding: 6px 9px;
+  border: 1px solid rgb(99 230 163 / 28%);
+  border-radius: 5px;
+  background: rgb(99 230 163 / 8%);
+  color: #a9edc3;
+}
+
+.ops-demo-badge {
+  padding: 6px 9px;
+  border: 1px solid rgb(233 189 122 / 28%);
+  border-radius: 999px;
+  background: rgb(233 189 122 / 9%);
+  color: var(--color-command-amber);
+  font: 700 9px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.ops-secure-label {
+  color: #75899f;
+}
+
+.tp-app .tp-sidebar {
+  background: #080d0a;
+}
+
+.tp-app .tp-brand-logo,
+.hospital-brand-icon {
+  border-color: rgb(99 230 163 / 25%);
+  background: rgb(99 230 163 / 8%);
+}
+
+.tp-app .tp-nav-link,
+.hospital-nav-link {
+  border-radius: 6px;
+}
+
+.tp-app .tp-nav-link.tp-nav-active {
+  background: rgb(69 186 123 / 13%);
+}
+
+.tp-app .tp-main-content,
+.hospital-content {
+  padding: 28px clamp(16px, 3vw, 42px);
+}
+
+.tp-app .tp-dashboard {
+  gap: 18px;
+}
+
+.tp-app .tp-page-header h1,
+.tp-app .tp-section-header h2,
+.tp-app .tp-alert-title strong,
+.tp-app .tp-alert-meta strong,
+.tp-app .tp-activity-content strong,
+.tp-app .tp-stat-content strong {
+  color: var(--color-command-text);
+}
+
+.tp-app .tp-breadcrumb,
+.tp-app .tp-page-header p,
+.tp-app .tp-section-header p,
+.tp-app .tp-stat-content span,
+.tp-app .tp-alert-main p,
+.tp-app .tp-alert-main small,
+.tp-app .tp-activity-content p,
+.tp-app .tp-activity-content small,
+.tp-app .tp-stat-content small {
+  color: var(--color-command-muted);
+}
+
+.tp-app .tp-welcome-panel {
+  border-color: rgb(99 230 163 / 20%);
+  background: linear-gradient(105deg, rgb(23 70 46 / 36%), rgb(12 19 15 / 82%));
+  box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+}
+
+.tp-app .tp-welcome-icon {
+  background: rgb(99 230 163 / 11%);
+  color: var(--color-command-emerald);
+}
+
+.tp-app .tp-welcome-panel h2 {
+  color: #e0f6e8;
+}
+
+.tp-app .tp-welcome-panel p {
+  color: #a7b9ad;
+}
+
+.tp-app .tp-welcome-status {
+  background: rgb(69 214 160 / 9%);
+  color: var(--color-command-emerald);
+}
+
+.tp-app .tp-stat-card,
+.tp-app .tp-card {
+  border-color: rgb(132 177 148 / 16%);
+  background: linear-gradient(150deg, rgb(21 30 25 / 82%), rgb(11 16 13 / 86%));
+  box-shadow: 0 18px 38px rgb(0 0 0 / 24%), inset 0 1px rgb(255 255 255 / 8%);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+.tp-app .tp-stat-icon {
+  border: 1px solid rgb(132 177 148 / 14%);
+  background: rgb(99 230 163 / 8%);
+  color: var(--color-command-cyan);
+}
+
+.tp-app .tp-stat-orange {
+  background: rgb(243 187 98 / 9%);
+  color: var(--color-command-amber);
+}
+
+.tp-app .tp-stat-green {
+  background: rgb(69 214 160 / 9%);
+  color: var(--color-command-emerald);
+}
+
+.tp-app .tp-stat-purple {
+  background: rgb(171 146 255 / 9%);
+  color: #b7a3ff;
+}
+
+.tp-app .tp-stat-trend {
+  display: none;
+}
+
+.tp-app .tp-section-header {
+  border-bottom-color: rgb(132 177 148 / 14%);
+}
+
+.tp-app .tp-section-header h2 svg {
+  color: var(--color-command-emerald);
+}
+
+.tp-app .tp-alert-row,
+.tp-app .tp-activity-line {
+  border-color: rgb(132 177 148 / 13%);
+}
+
+.tp-app .tp-alert-symbol {
+  border: 1px solid rgb(99 230 163 / 16%);
+  background: rgb(99 230 163 / 8%);
+  color: var(--color-command-emerald);
+}
+
+.tp-app .tp-priority-critical,
+.tp-app .tp-count-badge {
+  background: rgb(248 113 113 / 12%);
+  color: #ff9a9a;
+}
+
+.tp-app .tp-priority-high {
+  background: rgb(243 187 98 / 12%);
+  color: #f3c77d;
+}
+
+.tp-app .tp-panel-footer {
+  border-top-color: rgb(132 177 148 / 13%);
+  color: var(--color-command-muted);
+}
+
+.tp-app .tp-panel-footer button,
+.tp-app .tp-view-button {
+  color: var(--color-command-emerald);
+}
+
+.tp-app .tp-icon-button {
+  border-color: rgb(132 177 148 / 20%);
+  background: var(--color-command-panel);
+  color: var(--color-command-text);
+}
+
+.tp-app .tp-api-error-message {
+  border-color: rgb(248 113 113 / 32%);
+  background: rgb(127 29 29 / 18%);
+  color: #ffb2b2;
+}
+
+.tp-app .tp-live-indicator.tp-api-connecting {
+  color: var(--color-command-amber);
+}
+
+.tp-app .tp-live-indicator.tp-api-connecting span {
+  background: var(--color-command-amber);
+  box-shadow: 0 0 10px rgb(243 187 98 / 55%);
+}
+
+.tp-app .tp-live-indicator.tp-api-error,
+.tp-app .tp-welcome-status.tp-api-error {
+  color: #ff9a9a;
+}
+
+.tp-app .tp-live-indicator.tp-api-error span,
+.tp-app .tp-welcome-status.tp-api-error span {
+  background: #f87171;
+  box-shadow: 0 0 10px rgb(248 113 113 / 55%);
+}
+
+.tp-app .tp-welcome-status.tp-api-connecting {
+  background: rgb(243 187 98 / 9%);
+  color: var(--color-command-amber);
+}
+
+.tp-app .tp-welcome-status.tp-api-connecting span {
+  background: var(--color-command-amber);
+}
+
+.tp-app .tp-empty-state,
+.tp-app .tp-dashboard-footer {
+  color: var(--color-command-muted);
+}
+
+.hospital-app .hd-dashboard {
+  color: var(--color-command-text);
+}
+
+.hospital-app .hd-page-header h1,
+.hospital-app .hd-panel-header h3,
+.hospital-app .hd-patient-details h3,
+.hospital-app .hd-patient-details strong,
+.hospital-app .hd-ambulance-info strong,
+.hospital-app .hd-activity-item strong {
+  color: var(--color-command-text);
+}
+
+.hospital-app .hd-breadcrumb,
+.hospital-app .hd-page-header p,
+.hospital-app .hd-date,
+.hospital-app .hd-stat-card p,
+.hospital-app .hd-stat-note,
+.hospital-app .hd-panel-header p,
+.hospital-app .hd-patient-details p,
+.hospital-app .hd-ambulance-info span,
+.hospital-app .hd-activity-item p,
+.hospital-app .hd-activity-time {
+  color: var(--color-command-muted);
+}
+
+.hospital-app .hd-stat-card,
+.hospital-app .hd-panel {
+  border-color: rgb(132 177 148 / 16%);
+  background: linear-gradient(150deg, rgb(21 30 25 / 82%), rgb(11 16 13 / 86%));
+  box-shadow: 0 18px 38px rgb(0 0 0 / 24%), inset 0 1px rgb(255 255 255 / 8%);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+.hospital-app .hd-stat-icon {
+  border: 1px solid rgb(132 177 148 / 14%);
+  background: rgb(99 230 163 / 8%);
+  color: var(--color-command-cyan);
+}
+
+.hospital-app .hd-stat-icon.red {
+  background: rgb(248 113 113 / 9%);
+  color: #ff9292;
+}
+
+.hospital-app .hd-stat-icon.green {
+  background: rgb(69 214 160 / 9%);
+  color: var(--color-command-emerald);
+}
+
+.hospital-app .hd-stat-icon.purple {
+  background: rgb(171 146 255 / 9%);
+  color: #b7a3ff;
+}
+
+.hospital-app .hd-panel-header {
+  border-bottom-color: rgb(132 177 148 / 14%);
+}
+
+.hospital-app .hd-live-map-data {
+  border: 1px solid rgb(99 230 163 / 14%);
+  background: linear-gradient(145deg, rgb(17 43 31 / 70%), rgb(13 22 17 / 88%));
+  color: var(--color-command-muted);
+}
+
+.hospital-app .hd-live-map-data strong {
+  color: var(--color-command-text);
+}
+
+.hospital-app .hd-live-map-data a {
+  color: var(--color-command-emerald);
+}
+
+.hospital-app .hd-live-empty {
+  color: var(--color-command-muted);
+}
+
+.hospital-app .hd-live-error {
+  border-color: rgb(248 113 113 / 32%);
+  background: rgb(127 29 29 / 18%);
+  color: #ffb2b2;
+}
+
+.hospital-app .hd-emergency-body,
+.hospital-app .hd-bed-content,
+.hospital-app .hd-activity-list {
+  color: var(--color-command-text);
+}
+
+.hospital-app .hospital-info-card {
+  background: linear-gradient(145deg, #142019, #0c110e) !important;
+}
+
+.hospital-app .hospital-topbar-right {
+  gap: clamp(8px, 1.4vw, 20px);
+}
+
+.hospital-app .hospital-user-details strong {
+  color: var(--color-command-text);
+}
+
+.hospital-app .hospital-user-details small {
+  color: var(--color-command-muted);
+}
+
+.hospital-app .hospital-status {
+  border: 1px solid rgb(99 230 163 / 18%);
+  background: rgb(99 230 163 / 8%);
+  color: var(--color-command-emerald);
+}
+
+@keyframes command-pulse {
+  50% { opacity: 0.45; box-shadow: 0 0 4px rgb(99 230 163 / 30%); }
+}
+
+.glass-surface {
+  border: 1px solid rgb(255 255 255 / 15%);
+  background: linear-gradient(145deg, rgb(255 255 255 / 5%), rgb(12 28 20 / 46%));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 24px 60px rgb(0 0 0 / 58%);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+}
+
+.glass-pill {
+  border: 1px solid rgb(255 255 255 / 15%);
+  background: rgb(255 255 255 / 6%);
+  color: var(--color-command-text);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+}
+
+.driver-app {
+  color: var(--color-command-text);
+}
+
+.driver-header {
+  border-color: rgb(132 177 148 / 16%);
+  background: rgb(8 13 10 / 82%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+}
+
+.driver-brand-icon {
+  border: 1px solid rgb(248 113 113 / 24%);
+  background: rgb(248 113 113 / 10%);
+  color: #ff9a8d;
+}
+
+.driver-connectivity {
+  border: 1px solid rgb(99 230 163 / 20%);
+  background: rgb(99 230 163 / 8%);
+  color: var(--color-command-emerald);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.06em;
+}
+
+.driver-bottom-nav {
+  border-color: rgb(132 177 148 / 16%);
+  background: rgb(8 13 10 / 84%);
+  color: var(--color-command-text);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+}
+
+.driver-bottom-nav button {
+  transition: color 200ms ease, transform 200ms ease;
+}
+
+.driver-bottom-nav button:active {
+  transform: scale(0.96);
+}
+
+.driver-profile .bg-white {
+  border-color: rgb(132 177 148 / 16%);
+  background: linear-gradient(150deg, rgb(21 30 25 / 88%), rgb(11 16 13 / 92%));
+  box-shadow: inset 0 1px rgb(255 255 255 / 8%), 0 18px 38px rgb(0 0 0 / 24%);
+  color: var(--color-command-text);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+.driver-profile .text-slate-900,
+.driver-profile .text-slate-700,
+.driver-profile .text-slate-600 {
+  color: var(--color-command-text);
+}
+
+.driver-profile .text-slate-500,
+.driver-profile .text-slate-400 {
+  color: var(--color-command-muted);
+}
+
+.driver-profile input {
+  border-color: rgb(255 255 255 / 13%);
+  background: rgb(2 8 5 / 26%);
+  color: var(--color-command-text);
+}
+
+.driver-profile input:disabled {
+  background: rgb(255 255 255 / 4%);
+  color: var(--color-command-muted);
+}
+
+.app-sound-toggle {
+  position: fixed;
+  z-index: 120;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font: 700 9px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.08em;
+  transition: all 200ms ease;
+}
+
+.app-sound-toggle:hover {
+  border-color: rgb(99 230 163 / 40%);
+  background: rgb(99 230 163 / 12%);
+}
+
+.app-sound-toggle:active {
+  transform: scale(0.98);
+}
+
+.login-page {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  overflow: hidden;
+  place-items: center;
+  padding: 64px 24px 44px;
+  isolation: isolate;
+}
+
+.login-ambient {
+  position: absolute;
+  z-index: -1;
+  width: min(52vw, 660px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.27;
+  pointer-events: none;
+}
+
+.login-ambient-emerald {
+  top: -25%;
+  left: -12%;
+  background: #0d9658;
+}
+
+.login-ambient-teal {
+  right: -17%;
+  bottom: 1%;
+  background: #087c78;
+  opacity: 0.21;
+}
+
+.login-ambient-amber {
+  right: 26%;
+  bottom: -34%;
+  width: min(36vw, 430px);
+  background: #9c6428;
+  opacity: 0.12;
+}
+
+.login-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(440px, 1fr);
+  align-items: center;
+  gap: clamp(42px, 7vw, 110px);
+  width: min(1080px, 100%);
+}
+
+.login-intro {
+  color: var(--color-command-text);
+}
+
+.login-brand-mark {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 28px;
+  place-items: center;
+  border: 1px solid rgb(99 230 163 / 34%);
+  border-radius: 19px;
+  background: linear-gradient(145deg, rgb(99 230 163 / 20%), rgb(99 230 163 / 5%));
+  color: var(--color-command-emerald);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%), 0 16px 35px rgb(0 0 0 / 26%);
+}
+
+.login-kicker,
+.login-overline,
+.telemetry-label,
+.login-card-footer,
+.login-footer {
+  color: var(--color-command-muted);
+  font: 700 9px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.13em;
+}
+
+.login-kicker,
+.demo-credentials-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.live-pulse,
+.telemetry-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--color-command-emerald);
+  box-shadow: 0 0 12px rgb(99 230 163 / 72%);
+  animation: command-pulse 1.8s ease-in-out infinite;
+}
+
+.login-intro h1 {
+  margin: 15px 0 0;
+  font-size: clamp(48px, 7vw, 76px);
+  font-weight: 760;
+  letter-spacing: 0.11em;
+  line-height: 1;
+}
+
+.login-tagline {
+  margin-top: 20px;
+  color: #aab9af;
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.7;
+}
+
+.login-telemetry {
+  display: flex;
+  width: min(355px, 100%);
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 52px;
+  padding: 16px 18px;
+  border-radius: 17px;
+}
+
+.login-telemetry > div {
+  display: grid;
+  gap: 9px;
+}
+
+.login-telemetry strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.05em;
+}
+
+.login-telemetry strong svg {
+  color: var(--color-command-emerald);
+}
+
+.telemetry-pulse-demo {
+  background: var(--color-command-amber);
+  box-shadow: 0 0 12px rgb(233 189 122 / 72%);
+}
+
+.login-card {
+  width: 100%;
+  padding: clamp(24px, 4vw, 38px);
+  border-radius: 30px;
+}
+
+.login-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.login-card-header h2 {
+  margin-top: 7px;
+  color: #f2f7f3;
+  font-size: 30px;
+  font-weight: 680;
+  letter-spacing: -0.035em;
+}
+
+.login-subtitle {
+  margin-top: 7px;
+  color: var(--color-command-muted);
+  font-size: 13px;
+}
+
+.login-secure-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgb(99 230 163 / 20%);
+  border-radius: 16px;
+  background: rgb(99 230 163 / 8%);
+  color: var(--color-command-emerald);
+}
+
+.demo-credentials,
+.live-api-notice {
+  margin-bottom: 22px;
+  padding: 14px;
+  border: 1px solid rgb(233 189 122 / 22%);
+  border-radius: 18px;
+  background: rgb(233 189 122 / 6%);
+}
+
+.demo-credentials-title {
+  color: var(--color-command-amber);
+  font: 700 9px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.12em;
+}
+
+.demo-credentials-title .live-pulse {
+  background: var(--color-command-amber);
+  box-shadow: 0 0 12px rgb(233 189 122 / 65%);
+}
+
+.demo-credentials > p {
+  margin-top: 8px;
+  color: var(--color-command-muted);
+  font-size: 11px;
+}
+
+.demo-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.demo-role-button {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  padding: 10px 11px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 13px;
+  background: rgb(255 255 255 / 4%);
+  color: var(--color-command-text);
+  text-align: left;
+  transition: all 200ms ease;
+}
+
+.demo-role-button:hover {
+  border-color: rgb(99 230 163 / 36%);
+  background: rgb(99 230 163 / 9%);
+}
+
+.demo-role-button:active {
+  transform: scale(0.98);
+}
+
+.demo-role-button span {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.demo-role-button small,
+.demo-password-hint code {
+  color: var(--color-command-muted);
+  font: 10px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.demo-credentials .demo-password-hint {
+  margin-top: 11px;
+}
+
+.demo-password-hint code {
+  color: #e8d0a9;
+}
+
+.live-api-notice {
+  border-color: rgb(99 230 163 / 22%);
+  background: rgb(99 230 163 / 6%);
+  color: var(--color-command-emerald);
+  font: 700 9px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.live-api-notice span {
+  color: var(--color-command-muted);
+}
+
+.login-form {
+  display: grid;
+  gap: 18px;
+}
+
+.login-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #dce8df;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.login-form input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 15px;
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 999px;
+  outline: none;
+  background: rgb(2 8 5 / 26%);
+  color: var(--color-command-text);
+  font-size: 13px;
+  transition: all 200ms ease;
+}
+
+.login-form input::placeholder {
+  color: #718078;
+}
+
+.login-form input:focus {
+  border-color: rgb(99 230 163 / 62%);
+  box-shadow: 0 0 0 3px rgb(99 230 163 / 9%);
+}
+
+.login-form input:disabled {
+  opacity: 0.6;
+}
+
+.login-password-field {
+  position: relative;
+}
+
+.login-password-field input {
+  padding-right: 50px;
+}
+
+.password-visibility-button {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  transform: translateY(-50%);
+  color: var(--color-command-muted);
+}
+
+.password-visibility-button:hover {
+  color: var(--color-command-emerald);
+}
+
+.login-error {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid rgb(248 113 113 / 28%);
+  border-radius: 14px;
+  background: rgb(127 29 29 / 14%);
+  color: #ffc0b8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.login-error strong {
+  color: #ff9a8d;
+  font: 700 9px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.login-submit {
+  display: flex;
+  min-height: 49px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 3px;
+  border: 1px solid rgb(99 230 163 / 28%);
+  border-radius: 999px;
+  background: linear-gradient(110deg, #168855, #1a9b69);
+  color: #f4fff8;
+  font: 750 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.12em;
+  box-shadow: 0 12px 27px rgb(12 109 64 / 26%), inset 0 1px rgb(255 255 255 / 16%);
+  transition: all 200ms ease;
+}
+
+.login-submit:hover:not(:disabled) {
+  filter: brightness(1.11);
+}
+
+.login-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.login-submit:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.login-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgb(255 255 255 / 35%);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: login-spin 700ms linear infinite;
+}
+
+.login-card-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 23px;
+  padding-top: 15px;
+  border-top: 1px solid rgb(255 255 255 / 9%);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.login-footer {
+  position: absolute;
+  right: 12px;
+  bottom: 17px;
+  left: 12px;
+  text-align: center;
+  font-size: 8px;
+}
+
+@keyframes login-spin {
+  to { transform: rotate(360deg); }
+}
+
+.driver-pipeline {
+  border-color: rgb(99 230 163 / 17%);
+}
+
+.pipeline-eyebrow,
+.pipeline-index,
+.pipeline-step-state,
+.pipeline-state {
+  color: var(--color-command-muted);
+  font: 700 8px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.pipeline-state {
+  padding: 6px 8px;
+  border: 1px solid rgb(99 230 163 / 20%);
+  border-radius: 999px;
+  background: rgb(99 230 163 / 7%);
+  color: var(--color-command-emerald);
+  white-space: nowrap;
+}
+
+.pipeline-steps {
+  display: grid;
+  gap: 0;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pipeline-step {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  min-height: 56px;
+  padding-bottom: 12px;
+}
+
+.pipeline-step:not(:last-child)::after {
+  position: absolute;
+  top: 21px;
+  bottom: -1px;
+  left: 9px;
+  width: 1px;
+  background: rgb(255 255 255 / 12%);
+  content: "";
+}
+
+.pipeline-complete:not(:last-child)::after {
+  background: rgb(99 230 163 / 45%);
+}
+
+.pipeline-marker {
+  z-index: 1;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 50%;
+  background: #111915;
+  color: var(--color-command-muted);
+}
+
+.pipeline-complete .pipeline-marker {
+  border-color: rgb(99 230 163 / 55%);
+  background: rgb(99 230 163 / 13%);
+  color: var(--color-command-emerald);
+}
+
+.pipeline-active .pipeline-marker {
+  border-color: rgb(233 189 122 / 55%);
+  color: var(--color-command-amber);
+  box-shadow: 0 0 14px rgb(233 189 122 / 12%);
+}
+
+.pipeline-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.pipeline-step-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pipeline-step-heading strong {
+  color: #e4eee7;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.pipeline-complete .pipeline-step-heading strong {
+  color: #c8f2d6;
+}
+
+.pipeline-step-state {
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pipeline-complete .pipeline-step-state {
+  color: var(--color-command-emerald);
+}
+
+.pipeline-active .pipeline-step-state {
+  color: var(--color-command-amber);
+}
+
+.pipeline-copy p {
+  margin-top: 4px;
+  color: var(--color-command-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.pipeline-footnote {
+  margin-top: 2px;
+  padding-top: 11px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  color: #829187;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.driver-route-page {
+  display: flex;
+  width: min(680px, 100%);
+  height: calc(100dvh - 164px);
+  min-height: 380px;
+  max-height: 900px;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 10px 14px 14px;
+}
+
+.route-summary {
+  display: flex;
+  min-height: 82px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 20px;
+}
+
+.route-hospital-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border: 1px solid rgb(248 113 113 / 20%);
+  border-radius: 15px;
+  background: rgb(248 113 113 / 9%);
+  color: #ff9a8d;
+}
+
+.route-destination-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.route-destination-copy > p,
+.route-summary-eta span,
+.route-metrics > div > span {
+  color: var(--color-command-muted);
+  font: 700 8px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.route-destination-copy h2 {
+  overflow: hidden;
+  margin-top: 3px;
+  color: var(--color-command-text);
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-destination-copy > span {
+  display: block;
+  overflow: hidden;
+  margin-top: 3px;
+  color: var(--color-command-muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-summary-eta {
+  display: grid;
+  min-width: 64px;
+  gap: 5px;
+  padding-left: 13px;
+  border-left: 1px solid rgb(255 255 255 / 12%);
+  text-align: center;
+}
+
+.route-summary-eta strong {
+  color: #ff9a8d;
+  font: 750 17px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.driver-coordinate-map {
+  position: relative;
+  min-height: 160px;
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid rgb(99 230 163 / 18%);
+  border-radius: 23px;
+  background:
+    radial-gradient(ellipse at 48% 46%, rgb(36 113 73 / 20%), transparent 58%),
+    linear-gradient(145deg, #0d1510, #080d0a 70%);
+  box-shadow: inset 0 1px rgb(255 255 255 / 8%), 0 22px 50px rgb(0 0 0 / 30%);
+}
+
+.driver-coordinate-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.driver-map-road,
+.driver-map-road-secondary {
+  fill: none;
+  stroke: rgb(147 174 152 / 11%);
+  stroke-width: 17;
+}
+
+.driver-map-road-secondary {
+  stroke: rgb(147 174 152 / 7%);
+  stroke-width: 9;
+}
+
+.driver-map-route {
+  fill: none;
+  stroke: #74e6a9;
+  stroke-width: 3;
+  stroke-dasharray: 9 9;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 7px rgb(99 230 163 / 55%));
+  animation: route-dash 14s linear infinite;
+}
+
+.driver-map-hospital-halo {
+  fill: rgb(248 113 113 / 14%);
+  stroke: rgb(248 113 113 / 38%);
+  stroke-width: 1;
+}
+
+.driver-map-hospital-marker {
+  fill: #ff8d83;
+  stroke: #ffe0db;
+  stroke-width: 2;
+}
+
+.driver-map-ambulance-halo {
+  fill: rgb(99 230 163 / 14%);
+  stroke: rgb(99 230 163 / 38%);
+  stroke-width: 1;
+  animation: command-pulse 1.8s ease-in-out infinite;
+}
+
+.driver-map-ambulance-marker {
+  fill: #6de6a5;
+  stroke: #e4fff0;
+  stroke-width: 2;
+}
+
+.driver-map-label {
+  fill: #d7e8dc;
+  font: 700 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.driver-map-waiting-ring {
+  fill: rgb(233 189 122 / 7%);
+  stroke: rgb(233 189 122 / 34%);
+  stroke-dasharray: 4 5;
+}
+
+.driver-map-waiting-icon {
+  transform: translate(-11px, -11px);
+  color: var(--color-command-amber);
+}
+
+.driver-map-waiting-text {
+  fill: var(--color-command-muted);
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.driver-map-top-label,
+.driver-map-bottom-label {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  background: rgb(7 12 9 / 76%);
+  color: #d0e0d4;
+  font: 700 8px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(12px);
+}
+
+.driver-map-top-label {
+  top: 12px;
+  left: 12px;
+}
+
+.driver-map-top-label svg {
+  color: var(--color-command-emerald);
+}
+
+.driver-map-bottom-label {
+  bottom: 12px;
+  left: 12px;
+  max-width: min(70%, 280px);
+  overflow: hidden;
+  color: #a7b9ad;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.driver-map-status-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: var(--color-command-amber);
+}
+
+.driver-map-status-dot.is-live {
+  background: var(--color-command-emerald);
+  box-shadow: 0 0 10px rgb(99 230 163 / 70%);
+}
+
+.driver-map-coordinate-readout {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  color: #a7b9ad;
+  font: 700 8px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.06em;
+}
+
+.driver-map-schematic-note {
+  position: absolute;
+  top: 15px;
+  right: 14px;
+  color: #829187;
+  font: 600 7px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.05em;
+  text-align: right;
+}
+
+.route-metrics {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-around;
+  padding: 11px 8px;
+  border-radius: 20px;
+}
+
+.route-metrics > div:not(.route-metric-divider) {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.route-metrics > div > svg {
+  color: var(--color-command-emerald);
+}
+
+.route-metrics > div > span {
+  font-size: 7px;
+}
+
+.route-metrics > div > strong {
+  color: var(--color-command-text);
+  font: 700 11px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.route-metric-divider {
+  width: 1px;
+  height: 36px;
+  background: rgb(255 255 255 / 11%);
+}
+
+.route-start-button {
+  display: flex;
+  min-height: 47px;
+  flex: 0 0 47px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid rgb(99 230 163 / 30%);
+  border-radius: 999px;
+  background: linear-gradient(110deg, #168855, #1a9b69);
+  color: #f4fff8;
+  font-size: 12px;
+  font-weight: 750;
+  box-shadow: 0 12px 27px rgb(12 109 64 / 26%), inset 0 1px rgb(255 255 255 / 16%);
+  transition: all 200ms ease;
+}
+
+.route-start-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.route-start-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.route-start-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+@keyframes route-dash {
+  to { stroke-dashoffset: -90; }
+}
+
+@media (max-width: 420px) {
+  .driver-route-page {
+    height: calc(100dvh - 155px);
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .driver-map-schematic-note {
+    max-width: 130px;
+    line-height: 1.5;
+  }
+
+  .driver-map-coordinate-readout {
+    bottom: 43px;
+    left: 12px;
+    right: auto;
+  }
+
+  .route-metrics > div > span {
+    font-size: 6px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .ops-command-bar {
+    justify-content: flex-start;
+    padding-left: 18px;
+  }
+
+  .ops-command-bar .tp-menu-button {
+    display: grid;
+    width: 35px;
+    height: 35px;
+    place-items: center;
+    border: 1px solid rgb(128 166 197 / 20%);
+    border-radius: 7px;
+    background: var(--color-command-panel);
+    color: var(--color-command-text);
+  }
+
+  .ops-command-meta {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 650px) {
+  .ops-command-bar {
+    min-height: 50px;
+    padding: 0 15px;
+  }
+
+  .hospital-app .hospital-topbar-right .ops-role-badge,
+  .ops-secure-label {
+    display: none;
+  }
+
+  .tp-app .tp-main-content,
+  .hospital-content {
+    padding-top: 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .login-page {
+    align-items: start;
+    padding: 46px 16px 54px;
+  }
+
+  .login-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 25px;
+    width: min(520px, 100%);
+  }
+
+  .login-intro {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 13px;
+  }
+
+  .login-brand-mark {
+    grid-row: span 2;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+  }
+
+  .login-kicker {
+    font-size: 8px;
+  }
+
+  .login-intro h1 {
+    grid-column: 2;
+    margin-top: 5px;
+    font-size: 34px;
+  }
+
+  .login-tagline,
+  .login-telemetry {
+    display: none;
+  }
+
+  .login-card {
+    padding: 24px;
+  }
+
+  .login-card-header h2 {
+    font-size: 26px;
+  }
+
+  .login-footer {
+    display: none;
+  }
+
+  .app-sound-toggle {
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

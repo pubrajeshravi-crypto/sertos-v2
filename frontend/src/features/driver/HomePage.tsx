@@ -13,6 +13,8 @@ import {
     ChevronDown,
     ChevronRight,
     Radio,
+    Check,
+    Circle,
 } from 'lucide-react'
 
 import { useState } from 'react'
@@ -33,6 +35,9 @@ interface HomePageProps {
     emergencyStatus?: string
     trafficStatus?: string
     hasActiveIncident?: boolean
+    gpsDetected?: boolean
+    hospitalAssigned?: boolean
+    policeAcknowledged?: boolean
     notificationCount?: number
 
     onStartEmergency: () => void
@@ -53,6 +58,9 @@ export default function HomePage({
     emergencyStatus = 'READY',
     trafficStatus = 'Waiting',
     hasActiveIncident = false,
+    gpsDetected = false,
+    hospitalAssigned = false,
+    policeAcknowledged = false,
     notificationCount = 0,
     onStartEmergency,
     onNotificationClick,
@@ -60,13 +68,40 @@ export default function HomePage({
 }: HomePageProps) {
 
     const [reportExpanded, setReportExpanded] = useState(false)
+    const stages = [
+        {
+            title: 'Location Detected',
+            detail: gpsDetected ? 'Live GPS coordinates received.' : 'Waiting for a valid GPS coordinate.',
+            status: gpsDetected ? 'complete' : 'waiting',
+        },
+        {
+            title: 'Scanning Nearby Hospitals',
+            detail: hospitalAssigned ? 'Hospital options reviewed for this emergency.' : 'Hospital search begins during confirmation.',
+            status: hospitalAssigned ? 'complete' : hasActiveIncident ? 'active' : 'waiting',
+        },
+        {
+            title: 'Hospital Assigned',
+            detail: hospitalAssigned ? destination : 'Awaiting destination selection.',
+            status: hospitalAssigned ? 'complete' : hasActiveIncident ? 'active' : 'waiting',
+        },
+        {
+            title: 'Police Coordination',
+            detail: policeAcknowledged ? 'Dispatch acknowledgement received.' : 'Awaiting police dispatcher acknowledgement.',
+            status: policeAcknowledged ? 'complete' : hospitalAssigned ? 'active' : 'waiting',
+        },
+        {
+            title: 'Traffic Signal Bypass',
+            detail: 'Awaiting controller status from the police junction console.',
+            status: 'waiting',
+        },
+    ] as const
 
     return (
-        <div className="max-w-lg mx-auto px-4 pt-4 pb-28 space-y-4">
+        <div className="driver-command max-w-lg mx-auto px-4 pt-4 pb-28 space-y-4">
 
             {/* WELCOME SECTION */}
 
-            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#101B2D] via-[#172C49] to-[#10264D] p-5 text-white shadow-lg">
+            <section className="glass-surface relative overflow-hidden rounded-3xl p-5 text-white">
 
                 <div className="absolute -right-12 -top-12 w-40 h-40 rounded-full bg-white/5" />
                 <div className="absolute -right-5 bottom-[-65px] w-40 h-40 rounded-full bg-[#14B8A6]/10" />
@@ -101,7 +136,7 @@ export default function HomePage({
                             <div className="flex items-center gap-1.5 mt-1">
 
                                 <span
-                                    className={`w-2 h-2 rounded-full ${isOnDuty ? 'bg-[#14B8A6]' : 'bg-slate-400'
+                                    className={`w-2 h-2 rounded-full ${isOnDuty ? 'bg-command-emerald' : 'bg-slate-400'
                                         }`}
                                 />
 
@@ -137,8 +172,8 @@ export default function HomePage({
                         </p>
                     </div>
 
-                    <div className="bg-[#14B8A6]/15 border border-[#14B8A6]/20 rounded-xl p-2.5">
-                        <ShieldCheck size={23} className="text-[#14B8A6]" />
+                    <div className="bg-command-emerald/10 border border-command-emerald/20 rounded-xl p-2.5">
+                        <ShieldCheck size={23} className="text-command-emerald" />
                     </div>
 
                 </div>
@@ -148,14 +183,14 @@ export default function HomePage({
 
             {/* ASSIGNED AMBULANCE */}
 
-            <section className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <section className="glass-surface rounded-2xl p-4">
 
                 <div className="flex items-center justify-between">
 
                     <div className="flex items-center gap-3">
 
-                        <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
-                            <Ambulance size={24} className="text-[#EF4444]" />
+                        <div className="w-11 h-11 rounded-xl bg-red-500/10 flex items-center justify-center">
+                            <Ambulance size={24} className="text-red-300" />
                         </div>
 
                         <div>
@@ -163,15 +198,15 @@ export default function HomePage({
                                 Assigned ambulance
                             </p>
 
-                            <h3 className="text-base font-bold text-[#101B2D] mt-1">
+                            <h3 className="text-base font-bold text-command-text mt-1">
                                 {ambulanceNumber}
                             </h3>
                         </div>
 
                     </div>
 
-                    <div className={`${ambulanceNumber === 'Not assigned' ? 'bg-slate-100' : 'bg-teal-50'} px-3 py-1.5 rounded-full`}>
-                        <span className={`text-[10px] font-bold ${ambulanceNumber === 'Not assigned' ? 'text-slate-600' : 'text-teal-700'}`}>
+                    <div className={`${ambulanceNumber === 'Not assigned' ? 'bg-white/5' : 'bg-command-emerald/10'} px-3 py-1.5 rounded-full`}>
+                        <span className={`text-[10px] font-bold ${ambulanceNumber === 'Not assigned' ? 'text-slate-400' : 'text-command-emerald'}`}>
                             {ambulanceNumber === 'Not assigned' ? 'NO ASSIGNMENT' : 'ASSIGNED'}
                         </span>
                     </div>
@@ -183,18 +218,18 @@ export default function HomePage({
 
             {/* EMERGENCY ALERT */}
 
-            <section className="bg-white border border-red-100 rounded-2xl overflow-hidden shadow-sm">
+            <section className="glass-surface border-red-400/20 rounded-2xl overflow-hidden">
 
                 <div className="p-4">
 
                     <div className="flex items-center gap-3">
 
-                        <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
-                            <Siren size={23} className="text-[#EF4444]" />
+                        <div className="w-11 h-11 rounded-xl bg-red-500/10 flex items-center justify-center">
+                            <Siren size={23} className="text-red-300" />
                         </div>
 
                         <div className="flex-1">
-                            <h3 className="text-sm font-bold text-[#101B2D]">
+                            <h3 className="text-sm font-bold text-command-text">
                                 Emergency Response
                             </h3>
 
@@ -204,8 +239,8 @@ export default function HomePage({
                         </div>
 
                         <span className={`text-[10px] font-bold px-2.5 py-1.5 rounded-full ${hasActiveIncident
-                            ? 'text-red-700 bg-red-50'
-                            : 'text-teal-700 bg-teal-50'
+                            ? 'text-red-200 bg-red-500/10'
+                            : 'text-command-emerald bg-command-emerald/10'
                             }`}>
                             {emergencyStatus}
                         </span>
@@ -215,12 +250,12 @@ export default function HomePage({
                     <button
                         onClick={onStartEmergency}
                         disabled={!isOnDuty || hasActiveIncident}
-                        className="w-full mt-4 bg-[#EF4444] hover:bg-red-600 disabled:opacity-50 text-white rounded-xl py-3.5 flex items-center justify-center gap-2 font-bold text-sm shadow-md shadow-red-500/15 active:scale-[0.98] transition-all"
+                        className="w-full mt-4 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-full py-3.5 flex items-center justify-center gap-2 font-bold text-sm shadow-md shadow-red-500/15 active:scale-[0.98] transition-all duration-200"
                     >
-                        <Siren size={18} />
+                        <Mic size={18} />
                         {hasActiveIncident
                             ? 'Emergency Active'
-                            : 'Start Emergency'
+                            : 'Speak Emergency'
                         }
                     </button>
 
@@ -228,6 +263,33 @@ export default function HomePage({
 
             </section>
 
+            <section className="glass-surface driver-pipeline rounded-2xl p-4">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <p className="pipeline-eyebrow">LIVE RESPONSE FLOW</p>
+                        <h3 className="mt-1 text-sm font-bold text-command-text">Emergency pipeline</h3>
+                    </div>
+                    <span className="pipeline-state">{hasActiveIncident ? 'MISSION ACTIVE' : 'STANDBY'}</span>
+                </div>
+                <ol className="pipeline-steps">
+                    {stages.map((stage, index) => (
+                        <li className={`pipeline-step pipeline-${stage.status}`} key={stage.title}>
+                            <span className="pipeline-marker" aria-hidden="true">
+                                {stage.status === 'complete' ? <Check size={13} /> : <Circle size={7} />}
+                            </span>
+                            <div className="pipeline-copy">
+                                <div className="pipeline-step-heading">
+                                    <span className="pipeline-index">{String(index + 1).padStart(2, '0')}</span>
+                                    <strong>{stage.title}</strong>
+                                    <span className="pipeline-step-state">{stage.status === 'complete' ? 'COMPLETE' : stage.status === 'active' ? 'IN PROGRESS' : 'STANDBY'}</span>
+                                </div>
+                                <p>{stage.detail}</p>
+                            </div>
+                        </li>
+                    ))}
+                </ol>
+                <p className="pipeline-footnote">Controller execution is shown only when reported by the junction system.</p>
+            </section>
 
             {/* LIVE INFORMATION */}
 
@@ -235,12 +297,12 @@ export default function HomePage({
 
                 <div className="flex items-center justify-between mb-3">
 
-                    <h3 className="text-sm font-bold text-[#101B2D]">
+                    <h3 className="text-sm font-bold text-command-text">
                         Live Information
                     </h3>
 
-                    <div className="flex items-center gap-1.5 text-teal-600">
-                        <span className={`w-1.5 h-1.5 rounded-full ${hasActiveIncident ? 'bg-[#14B8A6]' : 'bg-amber-400'}`} />
+                    <div className="flex items-center gap-1.5 text-command-emerald">
+                        <span className={`w-1.5 h-1.5 rounded-full ${hasActiveIncident ? 'bg-command-emerald' : 'bg-amber-400'}`} />
                         <span className="text-[10px] font-semibold">
                             {hasActiveIncident ? 'MISSION ACTIVE' : 'AWAITING DISPATCH'}
                         </span>
@@ -252,17 +314,17 @@ export default function HomePage({
 
                     {/* ETA */}
 
-                    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <div className="glass-surface rounded-2xl p-4">
 
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                            <Clock3 size={19} className="text-[#2563EB]" />
+                        <div className="w-9 h-9 rounded-xl bg-command-emerald/10 flex items-center justify-center">
+                            <Clock3 size={19} className="text-command-emerald" />
                         </div>
 
-                        <p className="text-[11px] text-slate-500 mt-3">
+                        <p className="text-[11px] text-command-muted mt-3">
                             Hospital ETA
                         </p>
 
-                        <h3 className="text-xl font-extrabold text-[#101B2D] mt-1">
+                        <h3 className="text-xl font-extrabold text-command-text mt-1">
                             {hospitalETA}
                         </h3>
 
@@ -271,17 +333,17 @@ export default function HomePage({
 
                     {/* DESTINATION */}
 
-                    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <div className="glass-surface rounded-2xl p-4">
 
-                        <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
-                            <Hospital size={19} className="text-[#EF4444]" />
+                        <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center">
+                            <Hospital size={19} className="text-red-300" />
                         </div>
 
                         <p className="text-[11px] text-slate-500 mt-3">
                             Destination
                         </p>
 
-                        <h3 className="text-sm font-bold text-[#101B2D] mt-1 truncate">
+                        <h3 className="text-sm font-bold text-command-text mt-1 truncate">
                             {destination}
                         </h3>
 
@@ -290,17 +352,17 @@ export default function HomePage({
 
                     {/* GPS */}
 
-                    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <div className="glass-surface rounded-2xl p-4">
 
-                        <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center">
-                            <Navigation size={19} className="text-[#14B8A6]" />
+                        <div className="w-9 h-9 rounded-xl bg-command-emerald/10 flex items-center justify-center">
+                            <Navigation size={19} className="text-command-emerald" />
                         </div>
 
-                        <p className="text-[11px] text-slate-500 mt-3">
+                        <p className="text-[11px] text-command-muted mt-3">
                             GPS Tracking
                         </p>
 
-                        <h3 className="text-sm font-bold text-[#101B2D] mt-1">
+                        <h3 className="text-sm font-bold text-command-text mt-1">
                             {gpsStatus}
                         </h3>
 
@@ -309,17 +371,17 @@ export default function HomePage({
 
                     {/* RESPONSE */}
 
-                    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                    <div className="glass-surface rounded-2xl p-4">
 
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                            <Radio size={19} className="text-[#2563EB]" />
+                        <div className="w-9 h-9 rounded-xl bg-command-emerald/10 flex items-center justify-center">
+                            <Radio size={19} className="text-command-emerald" />
                         </div>
 
-                        <p className="text-[11px] text-slate-500 mt-3">
+                        <p className="text-[11px] text-command-muted mt-3">
                             Emergency Status
                         </p>
 
-                        <h3 className="text-sm font-bold text-[#101B2D] mt-1">
+                        <h3 className="text-sm font-bold text-command-text mt-1">
                             {emergencyStatus}
                         </h3>
 
@@ -335,18 +397,18 @@ export default function HomePage({
             <button
                 type="button"
                 onClick={onTrafficClick}
-                className="w-full text-left bg-white border border-slate-200 rounded-2xl p-4 shadow-sm active:scale-[0.99] transition-transform"
+                className="glass-surface w-full text-left rounded-2xl p-4 active:scale-[0.99] transition-all duration-200"
             >
 
                 <div className="flex items-center gap-3">
 
-                    <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
-                        <ShieldCheck size={23} className="text-[#2563EB]" />
+                    <div className="w-11 h-11 rounded-xl bg-command-emerald/10 flex items-center justify-center">
+                    <ShieldCheck size={23} className="text-command-emerald" />
                     </div>
 
                     <div className="flex-1 min-w-0">
 
-                        <h3 className="text-sm font-bold text-[#101B2D]">
+                        <h3 className="text-sm font-bold text-command-text">
                             Traffic Coordination
                         </h3>
 
@@ -356,7 +418,7 @@ export default function HomePage({
 
                     </div>
 
-                    <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2.5 py-1.5 rounded-full">
+                    <span className="text-[10px] font-semibold text-command-amber bg-command-amber/10 px-2.5 py-1.5 rounded-full">
                         {trafficStatus}
                     </span>
 
@@ -368,7 +430,7 @@ export default function HomePage({
 
             {patientReport && (
 
-                <section className="bg-white border border-blue-100 rounded-2xl overflow-hidden shadow-sm">
+                <section className="glass-surface rounded-2xl overflow-hidden">
 
                     <button
                         onClick={() => {
@@ -378,13 +440,13 @@ export default function HomePage({
                         className="w-full p-4 flex items-center gap-3 text-left"
                     >
 
-                        <div className="w-11 h-11 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                        <div className="w-11 h-11 bg-command-emerald/10 text-command-emerald rounded-xl flex items-center justify-center">
                             <Activity size={22} />
                         </div>
 
                         <div className="flex-1 min-w-0">
 
-                            <h3 className="font-bold text-sm text-[#101B2D]">
+                            <h3 className="font-bold text-sm text-command-text">
                                 Patient Report
                             </h3>
 
@@ -403,14 +465,14 @@ export default function HomePage({
 
                     {reportExpanded && (
 
-                        <div className="border-t border-slate-100 p-4">
+                        <div className="border-t border-white/10 p-4">
 
                             <p className="text-xs text-slate-500 font-semibold uppercase mb-2">
                                 Recorded patient report transcript
                             </p>
 
-                            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                                <p className="text-sm text-slate-700 leading-6">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                                <p className="text-sm text-command-text leading-6">
                                     {patientReport}
                                 </p>
                             </div>
@@ -430,12 +492,12 @@ export default function HomePage({
 
             {/* HANDS-FREE REPORTING */}
 
-            <section className="bg-[#101B2D] rounded-2xl p-4 text-white shadow-md">
+            <section className="glass-surface rounded-2xl p-4 text-white">
 
                 <div className="flex items-center gap-3">
 
-                    <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center">
-                        <Mic size={23} className="text-[#14B8A6]" />
+                    <div className="w-11 h-11 bg-command-emerald/10 rounded-xl flex items-center justify-center">
+                    <Mic size={23} className="text-command-emerald" />
                     </div>
 
                     <div className="flex-1">

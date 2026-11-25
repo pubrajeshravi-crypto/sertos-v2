@@ -1,472 +1,306 @@
-
-import { useEffect, useRef, useState } from 'react'
-import { importLibrary } from '@googlemaps/js-api-loader'
-import { api } from '../../lib/api'
+import { useEffect, useRef, useState } from "react";
+import { api, type IncidentLocation } from "../../lib/api";
 import {
     Hospital,
     Navigation,
     MapPin,
     Clock3,
     CarFront,
-    LocateFixed,
-    Loader2,
-} from 'lucide-react'
+    Radio,
+} from "lucide-react";
 
 interface RoutePageProps {
-    incidentId?: string
-    onStartNavigation: () => void
+    incidentId?: string;
+    onStartNavigation: () => void;
 }
 
 type Coordinates = {
-    lat: number
-    lng: number
+    lat: number;
+    lng: number;
+};
+
+type ProjectedPoint = {
+    x: number;
+    y: number;
+};
+
+type RouteData = {
+    distance_km: number;
+    duration_formatted: string;
+};
+
+function parseCoordinates(latitude: unknown, longitude: unknown): Coordinates | null {
+    const lat = typeof latitude === "number" || typeof latitude === "string" ? Number(latitude) : NaN;
+    const lng = typeof longitude === "number" || typeof longitude === "string" ? Number(longitude) : NaN;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return null;
+    }
+    return { lat, lng };
 }
 
-const DEFAULT_CENTER: Coordinates = {
-    lat: 20.5937,
-    lng: 78.9629,
+function coordinatesFromLocation(location: IncidentLocation | null): Coordinates | null {
+    return location ? parseCoordinates(location.latitude, location.longitude) : null;
 }
-const ambulanceAssetUrl = `${import.meta.env.BASE_URL}ambulance.png`
+
+function projectPoints(position: Coordinates | null, destination: Coordinates | null) {
+    const points = [position, destination].filter((point): point is Coordinates => Boolean(point));
+    if (!points.length) return { position: null, destination: null };
+    const minLat = Math.min(...points.map((point) => point.lat));
+    const maxLat = Math.max(...points.map((point) => point.lat));
+    const minLng = Math.min(...points.map((point) => point.lng));
+    const maxLng = Math.max(...points.map((point) => point.lng));
+    const latRange = Math.max(maxLat - minLat, 0.008);
+    const lngRange = Math.max(maxLng - minLng, 0.008);
+    const project = (point: Coordinates): ProjectedPoint => ({
+        x: 150 + ((point.lng - minLng) / lngRange) * 600,
+        y: 95 + ((maxLat - point.lat) / latRange) * 310,
+    });
+
+    return {
+        position: position ? project(position) : null,
+        destination: destination ? project(destination) : null,
+    };
+}
 
 function RoutePage({ incidentId, onStartNavigation }: RoutePageProps) {
-    const mapElementRef = useRef<HTMLDivElement | null>(null)
-
-    const mapRef = useRef<google.maps.Map | null>(null)
-
-    const ambulanceMarkerRef =
-        useRef<google.maps.marker.AdvancedMarkerElement | null>(null)
-
-    const AdvancedMarkerRef =
-        useRef<typeof google.maps.marker.AdvancedMarkerElement | null>(null)
-
-    const watchIdRef = useRef<number | null>(null)
-    const incidentIdRef = useRef<string | undefined>(incidentId)
-
-    const [position, setPosition] = useState<Coordinates | null>(null)
-    const [gpsStatus, setGpsStatus] = useState('Waiting for GPS')
-    const [mapStatus, setMapStatus] = useState('Loading Google Maps...')
-    const [mapReady, setMapReady] = useState(false)
-    const [mapError, setMapError] = useState(false)
-    const [routeError, setRouteError] = useState('')
-    const [route, setRoute] = useState<{ distance_km: number; duration_formatted: string } | null>(null)
-    const lastLocationPostAtRef = useRef(0)
-    const lastRouteFetchAtRef = useRef(0)
+    const [position, setPosition] = useState<Coordinates | null>(null);
+    const [destination, setDestination] = useState<Coordinates | null>(null);
+    const [destinationName, setDestinationName] = useState("Hospital destination");
+    const [gpsStatus, setGpsStatus] = useState("Waiting for GPS");
+    const [routeError, setRouteError] = useState("");
+    const [route, setRoute] = useState<RouteData | null>(null);
+    const lastLocationPostAtRef = useRef(0);
+    const hasCoordinatesRef = useRef(false);
 
     useEffect(() => {
-        incidentIdRef.current = incidentId
-    }, [incidentId])
+        if (!incidentId) {
+            setPosition(null);
+            setDestination(null);
+            setRoute(null);
+            setGpsStatus("No active incident");
+            hasCoordinatesRef.current = false;
+            return;
+        }
 
-    // =================================
-    // INITIALIZE GOOGLE MAP
-    // =================================
-
-    useEffect(() => {
-        let cancelled = false
-
-        const initializeMap = async () => {
+        let active = true;
+        const loadDestination = async () => {
             try {
-                const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-
-                if (!apiKey) {
-                    throw new Error('Google Maps API key is missing in .env')
-                }
-
-                // Load Maps and Advanced Marker libraries.
-                // setOptions() is already configured once in index.js.
-
-                const [mapsLibrary, markerLibrary] = await Promise.all([
-                    importLibrary('maps') as Promise<google.maps.MapsLibrary>,
-                    importLibrary('marker') as Promise<google.maps.MarkerLibrary>,
-                ])
-
-                if (cancelled || !mapElementRef.current) return
-
-                AdvancedMarkerRef.current =
-                    markerLibrary.AdvancedMarkerElement
-
-                const map = new mapsLibrary.Map(mapElementRef.current, {
-                    center: DEFAULT_CENTER,
-                    zoom: 5,
-
-                    // Required for AdvancedMarkerElement.
-                    mapId: 'DEMO_MAP_ID',
-
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: false,
-                    clickableIcons: false,
-                    gestureHandling: 'greedy',
-                })
-
-                mapRef.current = map
-
-                map.addListener("click", (event: google.maps.MapMouseEvent) => {
-                    if (!event.latLng) return
-                    const selected = {
-                        lat: event.latLng.lat(),
-                        lng: event.latLng.lng(),
-                    }
-                    setPosition(selected)
-                    setGpsStatus("Manual GPS coordinate selected")
-
-                    if (incidentIdRef.current) {
-                        api.sendLocation(incidentIdRef.current, selected.lat, selected.lng)
-                            .catch((error: unknown) =>
-                                console.error("Manual GPS update failed:", error),
-                            )
-                    }
-
-                    const MarkerClass = AdvancedMarkerRef.current
-                    if (!MarkerClass) return
-
-                    if (ambulanceMarkerRef.current) {
-                        ambulanceMarkerRef.current.position = selected
-                    } else {
-                        const ambulanceImage = document.createElement("img")
-                        ambulanceImage.src = ambulanceAssetUrl
-                        ambulanceImage.alt = "Ambulance"
-                        ambulanceImage.style.width = "55px"
-                        ambulanceImage.style.height = "55px"
-                        ambulanceImage.style.objectFit = "contain"
-                        ambulanceImage.draggable = false
-
-                        const marker = new MarkerClass({
-                            map,
-                            position: selected,
-                            title: "Ambulance - Selected Location",
-                            zIndex: 1000,
-                        })
-                        marker.append(ambulanceImage)
-                        ambulanceMarkerRef.current = marker
-                    }
-                })
-
-                setMapReady(true)
-                setMapStatus('Google Maps connected')
-
-            } catch (error) {
-                console.error('Google Maps initialization error:', error)
-
-                if (!cancelled) {
-                    setMapStatus(
-                        error instanceof Error
-                            ? error.message
-                            : 'Unable to load Google Maps'
-                    )
-                    setMapError(true)
+                const [incidents, hospitals] = await Promise.all([
+                    api.getDriverIncidents(),
+                    api.getHospitals(),
+                ]);
+                if (!active) return;
+                const incident = incidents.find((item) => item.id === incidentId);
+                const hospitalId = incident?.hospital?.id;
+                const hospital = hospitals.find((item) => item.id === hospitalId);
+                setDestinationName(hospital?.name || incident?.hospital_name || "Hospital destination");
+                setDestination(parseCoordinates(hospital?.latitude, hospital?.longitude));
+            } catch (reason) {
+                if (active) {
+                    setRouteError(reason instanceof Error ? reason.message : "Unable to load destination details.");
                 }
             }
-        }
+        };
 
-        initializeMap()
+        const refreshRouteAndLocation = async () => {
+            const [locationResult, routeResult] = await Promise.allSettled([
+                api.getLocation(incidentId),
+                api.getRoute(incidentId),
+            ]);
+            if (!active) return;
+
+            if (locationResult.status === "fulfilled") {
+                const current = coordinatesFromLocation(locationResult.value);
+                if (current) {
+                    setPosition(current);
+                    hasCoordinatesRef.current = true;
+                    setGpsStatus("Live incident coordinates");
+                }
+            } else {
+                setGpsStatus(locationResult.reason instanceof Error
+                    ? `Location feed unavailable: ${locationResult.reason.message}`
+                    : "Location feed unavailable");
+            }
+
+            if (routeResult.status === "fulfilled") {
+                setRoute(routeResult.value);
+                setRouteError("");
+            } else {
+                setRouteError(routeResult.reason instanceof Error
+                    ? routeResult.reason.message
+                    : "Route service unavailable.");
+            }
+        };
+
+        void loadDestination();
+        void refreshRouteAndLocation();
+        const timer = window.setInterval(() => {
+            void refreshRouteAndLocation();
+        }, 15_000);
 
         return () => {
-            cancelled = true
-            mapRef.current = null
-            AdvancedMarkerRef.current = null
-            setMapReady(false)
-        }
-    }, [])
-
-    // =================================
-    // LIVE AMBULANCE GPS TRACKING
-    // =================================
+            active = false;
+            window.clearInterval(timer);
+        };
+    }, [incidentId]);
 
     useEffect(() => {
         if (!navigator.geolocation) {
-            setGpsStatus('GPS not supported by browser')
-            return
+            if (!hasCoordinatesRef.current) setGpsStatus("GPS not supported by browser");
+            return;
         }
-
-        setGpsStatus('Requesting GPS permission...')
-        lastLocationPostAtRef.current = 0
-        lastRouteFetchAtRef.current = 0
 
         const watchId = navigator.geolocation.watchPosition(
             (location) => {
                 const currentPosition: Coordinates = {
                     lat: location.coords.latitude,
                     lng: location.coords.longitude,
-                }
+                };
+                setPosition(currentPosition);
+                hasCoordinatesRef.current = true;
+                setGpsStatus("Browser GPS connected");
 
-                setPosition(currentPosition)
-                setGpsStatus('GPS connected')
                 if (incidentId) {
-                    const now = Date.now()
+                    const now = Date.now();
                     if (now - lastLocationPostAtRef.current >= 5_000) {
-                        lastLocationPostAtRef.current = now
+                        lastLocationPostAtRef.current = now;
                         api.sendLocation(incidentId, currentPosition.lat, currentPosition.lng)
-                            .catch((error: unknown) => {
-                                console.error('GPS update failed:', error)
-                                setGpsStatus(error instanceof Error ? `GPS upload failed: ${error.message}` : 'GPS upload failed')
-                            })
-                    }
-                    if (now - lastRouteFetchAtRef.current >= 30_000) {
-                        lastRouteFetchAtRef.current = now
-                        api.getRoute(incidentId)
-                            .then((summary) => {
-                                setRoute(summary)
-                                setRouteError('')
-                            })
-                            .catch((error: unknown) => {
-                                setRouteError(error instanceof Error ? error.message : 'Route service unavailable.')
-                            })
+                            .catch((reason: unknown) => {
+                                console.error("GPS update failed:", reason);
+                                setGpsStatus(reason instanceof Error
+                                    ? `GPS upload failed: ${reason.message}`
+                                    : "GPS upload failed");
+                            });
                     }
                 }
             },
-
             (error) => {
-                console.error('GPS error:', error)
-
+                console.error("GPS error:", error);
                 const messages: Record<number, string> = {
-                    1: 'GPS permission denied',
-                    2: 'GPS position unavailable',
-                    3: 'GPS request timed out',
-                }
-
-                setGpsStatus(
-                    messages[error.code] || 'Unable to access GPS'
-                )
+                    1: "GPS permission denied",
+                    2: "GPS position unavailable",
+                    3: "GPS request timed out",
+                };
+                if (!hasCoordinatesRef.current) setGpsStatus(messages[error.code] || "Unable to access GPS");
             },
+            { enableHighAccuracy: true, maximumAge: 3_000, timeout: 15_000 },
+        );
 
-            {
-                enableHighAccuracy: true,
-                maximumAge: 3000,
-                timeout: 15000,
-            }
-        )
+        return () => navigator.geolocation.clearWatch(watchId);
+    }, [incidentId]);
 
-        watchIdRef.current = watchId
-
-        return () => {
-            navigator.geolocation.clearWatch(watchId)
-            watchIdRef.current = null
-        }
-    }, [incidentId])
-
-    // GPS is a backend input; the map is only its visualization. Keep the
-    // controller feed working even if the Maps key or map service is down.
-    useEffect(() => {
-        const map = mapRef.current
-        const MarkerClass = AdvancedMarkerRef.current
-        if (!mapReady || !map || !MarkerClass || !position) return
-
-        map.panTo(position)
-        map.setZoom(16)
-
-        if (!ambulanceMarkerRef.current) {
-            const ambulanceImage = document.createElement('img')
-            ambulanceImage.src = ambulanceAssetUrl
-            ambulanceImage.alt = 'Ambulance'
-            ambulanceImage.style.width = '55px'
-            ambulanceImage.style.height = '55px'
-            ambulanceImage.style.objectFit = 'contain'
-            ambulanceImage.draggable = false
-
-            const marker = new MarkerClass({
-                map,
-                position,
-                title: 'Ambulance location',
-                zIndex: 1000,
-                anchorLeft: '-50%',
-                anchorTop: '-50%',
-            })
-            marker.append(ambulanceImage)
-            ambulanceMarkerRef.current = marker
-        } else {
-            ambulanceMarkerRef.current.position = position
-        }
-    }, [mapReady, position])
-
-    // =================================
-    // CLEANUP AMBULANCE MARKER
-    // =================================
-
-    useEffect(() => {
-        return () => {
-            if (ambulanceMarkerRef.current) {
-                ambulanceMarkerRef.current.map = null
-                ambulanceMarkerRef.current = null
-            }
-        }
-    }, [])
-
-    // =================================
-    // RECENTER MAP
-    // =================================
-
-    const recenterMap = () => {
-        if (!position || !mapRef.current) {
-            setGpsStatus('Waiting for GPS location...')
-            return
-        }
-
-        mapRef.current.panTo(position)
-        mapRef.current.setZoom(17)
-    }
-
-    // =================================
-    // UI
-    // =================================
+    const projected = projectPoints(position, destination);
+    const routePath = projected.position && projected.destination
+        ? `M ${projected.position.x} ${projected.position.y} C ${(projected.position.x + projected.destination.x) / 2} ${projected.position.y - 42}, ${(projected.position.x + projected.destination.x) / 2} ${projected.destination.y + 42}, ${projected.destination.x} ${projected.destination.y}`
+        : "";
 
     return (
-        <div className="w-full max-w-lg mx-auto h-[calc(100dvh-164px)] min-h-[360px] max-h-[850px] px-3 pt-2 pb-2 flex flex-col gap-2.5">
-
-            {/* DESTINATION AND ETA */}
-
-            <section className="shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm p-3 flex items-center gap-3">
-
-                <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                    <Hospital size={23} className="text-red-600" />
+        <div className="driver-route-page">
+            <section className="glass-surface route-summary">
+                <div className="route-hospital-icon">
+                    <Hospital size={22} />
                 </div>
-
-                <div className="flex-1 min-w-0">
-                    <p className="text-[10px] uppercase tracking-wide font-bold text-slate-500">
-                        Emergency Destination
-                    </p>
-
-                    <h2 className="text-sm font-bold text-[#10264D] truncate mt-0.5">
-                        {route ? 'Emergency route' : 'Hospital route pending'}
-                    </h2>
-
-                    <p className="text-[10px] text-slate-400">
-                        {route ? 'Route updated from backend' : routeError || 'Waiting for route data'}
-                    </p>
+                <div className="route-destination-copy">
+                    <p>EMERGENCY DESTINATION</p>
+                    <h2>{destinationName}</h2>
+                    <span>{route ? "Route summary from backend" : routeError || "Waiting for route data"}</span>
                 </div>
-
-                <div className="border-l border-slate-200 pl-3 text-center shrink-0">
-                    <p className="text-[10px] font-semibold text-slate-500">
-                        ETA
-                    </p>
-
-                    <p className="text-xl font-extrabold text-red-600">
-                        {route?.duration_formatted ?? '-- min'}
-                    </p>
+                <div className="route-summary-eta">
+                    <span>ETA</span>
+                    <strong>{route?.duration_formatted ?? "-- min"}</strong>
                 </div>
-
             </section>
 
-            {/* GOOGLE MAP */}
+            <section className="driver-coordinate-map" aria-label="Live ambulance and hospital coordinate plot">
+                <svg className="driver-coordinate-svg" viewBox="0 0 900 500" role="img" aria-label="Schematic connection between ambulance GPS and assigned hospital">
+                    <defs>
+                        <pattern id="driver-map-grid" width="48" height="48" patternUnits="userSpaceOnUse">
+                            <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(169, 210, 179, 0.08)" strokeWidth="1" />
+                        </pattern>
+                        <radialGradient id="driver-map-glow">
+                            <stop offset="0%" stopColor="#2b9b66" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="#2b9b66" stopOpacity="0" />
+                        </radialGradient>
+                    </defs>
+                    <rect width="900" height="500" fill="url(#driver-map-glow)" />
+                    <rect width="900" height="500" fill="url(#driver-map-grid)" />
+                    <path d="M 0 370 C 190 320, 260 400, 420 340 S 700 260, 900 310" className="driver-map-road" />
+                    <path d="M 130 0 C 210 130, 170 300, 290 500 M 650 0 C 590 160, 710 340, 620 500" className="driver-map-road-secondary" />
 
-            <section className="relative flex-1 min-h-[150px] overflow-hidden rounded-2xl border border-slate-200 bg-[#E8F0E8] shadow-sm">
+                    {routePath && <path d={routePath} className="driver-map-route" />}
 
-                <div
-                    ref={mapElementRef}
-                    className="absolute inset-0 w-full h-full"
-                />
+                    {projected.destination && (
+                        <g transform={`translate(${projected.destination.x} ${projected.destination.y})`}>
+                            <circle r="18" className="driver-map-hospital-halo" />
+                            <circle r="8" className="driver-map-hospital-marker" />
+                            <text x="15" y="-13" className="driver-map-label">HOSPITAL</text>
+                        </g>
+                    )}
 
-                {/* MAP STATUS */}
+                    {projected.position && (
+                        <g transform={`translate(${projected.position.x} ${projected.position.y})`}>
+                            <circle r="22" className="driver-map-ambulance-halo" />
+                            <circle r="9" className="driver-map-ambulance-marker" />
+                            <text x="16" y="24" className="driver-map-label">AMBULANCE · LIVE</text>
+                        </g>
+                    )}
 
-                <div className="absolute top-3 left-3 bg-white/95 rounded-lg px-2.5 py-1.5 shadow-sm pointer-events-none">
+                    {!position && (
+                        <g transform="translate(450 250)">
+                            <circle r="28" className="driver-map-waiting-ring" />
+                            <MapPin size={22} className="driver-map-waiting-icon" />
+                            <text x="0" y="52" textAnchor="middle" className="driver-map-waiting-text">WAITING FOR GPS COORDINATES</text>
+                        </g>
+                    )}
+                </svg>
 
-                    <p className="text-[10px] font-bold text-slate-700 flex items-center gap-1.5">
-                        <MapPin size={12} className="text-blue-600" />
-                        GOOGLE MAPS
-                    </p>
-
+                <div className="driver-map-top-label">
+                    <MapPin size={13} />
+                    <span>LIVE COORDINATE VIEW</span>
                 </div>
-
-                {/* GPS STATUS */}
-
-                <div className="absolute bottom-3 left-3 bg-white/95 rounded-lg px-2.5 py-1.5 shadow-md pointer-events-none">
-
-                    <p className="text-[10px] font-semibold text-slate-700 flex items-center gap-1.5">
-
-                        <span
-                            className={`w-2 h-2 rounded-full ${position
-                                    ? 'bg-green-500'
-                                    : 'bg-amber-500 animate-pulse'
-                                }`}
-                        />
-
-                        {gpsStatus}
-
-                    </p>
-
+                <div className="driver-map-bottom-label">
+                    <span className={`driver-map-status-dot ${position ? "is-live" : ""}`} />
+                    <span>{gpsStatus}</span>
                 </div>
-
-                {/* RECENTER BUTTON */}
-
-                {mapReady && <button
-                    type="button"
-                    onClick={recenterMap}
-                    className="absolute bottom-3 right-3 bg-white w-10 h-10 rounded-full shadow-md flex items-center justify-center active:scale-95"
-                    aria-label="Center on ambulance location"
-                >
-                    <LocateFixed size={20} className="text-blue-600" />
-                </button>}
-
-                {/* LOADING INDICATOR */}
-
-                {!mapReady && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-100/90 pointer-events-none">
-                        <div className="text-center">
-                            {!mapError && <Loader2 className="animate-spin mx-auto text-blue-600" size={27} />}
-
-                            <p className="text-xs font-semibold text-slate-600 mt-2 max-w-xs px-4">
-                                {mapStatus}
-                            </p>
-                            {mapError && <p className="mt-1 text-[11px] text-slate-500">GPS tracking continues without the map view. Add a valid Maps API key to show the map.</p>}
-                        </div>
+                {position && (
+                    <div className="driver-map-coordinate-readout">
+                        {position.lat.toFixed(5)}° N&nbsp; / &nbsp;{position.lng.toFixed(5)}° E
                     </div>
                 )}
-
+                <span className="driver-map-schematic-note">SCHEMATIC COORDINATE LINK · NOT A ROAD-BY-ROAD ROUTE</span>
             </section>
 
-            {/* DISTANCE AND ETA */}
-
-            <section className="shrink-0 bg-white border border-slate-200 rounded-2xl shadow-sm px-4 py-3">
-
-                <div className="flex items-center justify-around">
-
-                    <div className="flex items-center gap-2.5">
-                        <CarFront size={23} className="text-[#10264D]" />
-
-                        <div>
-                            <p className="text-[10px] text-slate-500">
-                                Distance
-                            </p>
-
-                            <p className="text-sm font-bold text-[#10264D]">
-                                {route ? `${route.distance_km.toFixed(1)} km` : '--'}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="h-9 w-px bg-slate-200" />
-
-                    <div className="flex items-center gap-2.5">
-                        <Clock3 size={22} className="text-[#10264D]" />
-
-                        <div>
-                            <p className="text-[10px] text-slate-500">
-                                ETA
-                            </p>
-
-                            <p className="text-sm font-bold text-[#10264D]">
-                                {route?.duration_formatted ?? '--'}
-                            </p>
-                        </div>
-                    </div>
-
+            <section className="glass-surface route-metrics">
+                <div>
+                    <CarFront size={21} />
+                    <span>DISTANCE</span>
+                    <strong>{route ? `${route.distance_km.toFixed(1)} km` : "--"}</strong>
                 </div>
-
+                <div className="route-metric-divider" />
+                <div>
+                    <Clock3 size={20} />
+                    <span>ESTIMATED ARRIVAL</span>
+                    <strong>{route?.duration_formatted ?? "--"}</strong>
+                </div>
+                <div className="route-metric-divider" />
+                <div>
+                    <Radio size={20} />
+                    <span>TRACKING SOURCE</span>
+                    <strong>{position ? "API / GPS" : "WAITING"}</strong>
+                </div>
             </section>
-
-            {/* START NAVIGATION */}
 
             <button
                 type="button"
                 onClick={onStartNavigation}
-                disabled={!position}
-                className="shrink-0 w-full bg-[#2563EB] hover:bg-blue-700 disabled:bg-slate-400 active:scale-[0.98] text-white rounded-full py-3.5 flex items-center justify-center gap-2 font-bold text-sm shadow-md transition-all"
+                disabled={!position || !incidentId}
+                className="route-start-button"
             >
                 <Navigation size={18} />
                 Start Navigation
             </button>
-
         </div>
-    )
+    );
 }
 
-export default RoutePage
+export default RoutePage;

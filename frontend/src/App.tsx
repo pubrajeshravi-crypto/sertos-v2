@@ -26,6 +26,7 @@ import TrafficDeviceManagement from "./features/admin/TrafficDeviceManagement";
 import IncidentHistory from "./features/shared/IncidentHistory";
 import ProfilePage from "./features/shared/ProfilePage";
 import { getSession } from "./lib/auth";
+import SoundToggle from "./components/SoundToggle";
 type UserRole = "driver" | "traffic_police" | "hospital" | "admin";
 
 // Temporary route wrapper
@@ -58,6 +59,7 @@ function ProtectedRoute({
 function App() {
   return (
     <BrowserRouter>
+      <SoundToggle />
       <Routes>
         <Route path="/" element={<LoginPage />} />
 

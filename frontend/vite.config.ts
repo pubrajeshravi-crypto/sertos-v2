@@ -3,9 +3,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig({
-  // Django/WhiteNoise serves the Render bundle beneath STATIC_URL.
-  base: '/static/',
+export default defineConfig(({ command }) => ({
+  // Django/WhiteNoise serves production assets beneath STATIC_URL.
+  base: command === 'serve' ? '/' : '/static/',
   plugins: [
     react(),
     tailwindcss(),
@@ -22,4 +22,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

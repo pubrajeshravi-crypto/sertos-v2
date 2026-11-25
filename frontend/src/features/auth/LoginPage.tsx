@@ -1,8 +1,10 @@
-
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, login } from "../../lib/api";
+import { Ambulance, Eye, EyeOff, Radio, ShieldCheck } from "lucide-react";
+import { ApiError, login, MOCK_MODE } from "../../lib/api";
 import { saveSession } from "../../lib/auth";
+import { playSound, unlockAudio } from "../../lib/sound";
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "../../mocks/fixtures";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -20,19 +22,24 @@ export default function LoginPage() {
 
         if (!username) {
             setError("Please enter your username or email address.");
+            playSound("error");
             return;
         }
 
         if (!password.trim()) {
             setError("Please enter your password.");
+            playSound("error");
             return;
         }
 
+        void unlockAudio();
+        playSound("tick");
         setLoading(true);
 
         try {
             const session = await login(username, password);
             saveSession(session);
+            playSound("success");
 
             const destinations: Record<string, string> = {
                 AMBULANCE_DRIVER: "/driver",
@@ -42,155 +49,168 @@ export default function LoginPage() {
             };
 
             navigate(destinations[session.user.role] ?? "/", { replace: true });
-        } catch (err) {
+        } catch (reason) {
             setError(
-                err instanceof ApiError
-                    ? err.message
+                reason instanceof ApiError
+                    ? reason.message
                     : "Unable to connect to the backend. Please try again.",
             );
+            playSound("error");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-[#101D32] px-5 py-8">
-            <div className="w-full max-w-md">
+        <main className="login-page">
+            <div className="login-ambient login-ambient-emerald" />
+            <div className="login-ambient login-ambient-teal" />
+            <div className="login-ambient login-ambient-amber" />
 
-                {/* Branding */}
-                <div className="text-center mb-8">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500 shadow-lg shadow-emerald-500/20">
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="white"
-                            strokeWidth="1.8"
-                            className="h-9 w-9"
-                        >
-                            <path d="M3 7h11v11H3zM14 11h4l3 4v3h-7z" />
-                            <circle cx="7.5" cy="18" r="2" />
-                            <circle cx="18" cy="18" r="2" />
-                            <path d="M8.5 10v5M6 12.5h5" />
-                        </svg>
+            <div className="login-layout">
+                <section className="login-intro">
+                    <div className="login-brand-mark">
+                        <Ambulance size={27} strokeWidth={1.7} />
                     </div>
-
-                    <h1 className="text-3xl font-bold tracking-wider text-white">
-                        SERTOS
-                    </h1>
-
-                    <p className="mt-2 text-sm text-slate-400">
-                        Emergency Response Management System
+                    <div className="login-kicker">
+                        <span className="live-pulse" />
+                        EMERGENCY RESPONSE NETWORK
+                    </div>
+                    <h1>SERTOS</h1>
+                    <p className="login-tagline">
+                        One coordinated response.
+                        <br />
+                        Every second accounted for.
                     </p>
-                </div>
+                    <div className="login-telemetry glass-surface">
+                        <div>
+                            <span className="telemetry-label">NETWORK STATUS</span>
+                            <strong><Radio size={14} /> {MOCK_MODE ? "DEMO SIMULATION" : "SECURE ACCESS"}</strong>
+                        </div>
+                        <span className={`telemetry-pulse ${MOCK_MODE ? "telemetry-pulse-demo" : ""}`} />
+                    </div>
+                </section>
 
-                {/* Login Card */}
-                <div className="rounded-3xl border border-white/10 bg-[#1D2D44] p-7 shadow-2xl sm:p-9">
-                    <div className="mb-7">
-                        <h2 className="text-2xl font-semibold text-white">
-                            Welcome Back
-                        </h2>
-                        <p className="mt-2 text-sm text-slate-400">
-                            Sign in to your authorized account
-                        </p>
+                <section className="login-card glass-surface">
+                    <div className="login-card-header">
+                        <div>
+                            <p className="login-overline">COMMAND ACCESS</p>
+                            <h2>Sign in</h2>
+                            <p className="login-subtitle">Use your authorized SERTOS account.</p>
+                        </div>
+                        <div className="login-secure-icon" aria-hidden="true">
+                            <ShieldCheck size={23} />
+                        </div>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-5">
-
-                        {/* Email */}
-                        <div>
-                            <label
-                                htmlFor="email"
-                                className="mb-2 block text-sm font-medium text-slate-200"
-                            >
-                                Username or Email
-                            </label>
-
-                            <div className="flex items-center rounded-xl border border-slate-600 bg-[#142238] px-4 transition focus-within:border-emerald-400">
-                                <input
-                                    id="email"
-                                    type="text"
-                                    autoComplete="username"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="                                    Enter your username or email address"
-                                    disabled={loading}
-                                    className="w-full bg-transparent py-3.5 text-sm text-white outline-none placeholder:text-slate-500 disabled:opacity-60"
-                                    required
-                                />
+                    {MOCK_MODE && (
+                        <div className="demo-credentials">
+                            <div className="demo-credentials-title">
+                                <span className="live-pulse" />
+                                DEMO MODE ENABLED
                             </div>
+                            <p>Select a role to fill the demo sign-in fields.</p>
+                            <div className="demo-role-grid">
+                                {DEMO_ACCOUNTS.map((account) => (
+                                    <button
+                                        key={account.username}
+                                        type="button"
+                                        className="demo-role-button"
+                                        onClick={() => {
+                                            setEmail(account.username);
+                                            setPassword(DEMO_PASSWORD);
+                                            setError("");
+                                            playSound("tick");
+                                        }}
+                                    >
+                                        <span>{account.label}</span>
+                                        <small>{account.username}</small>
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="demo-password-hint">
+                                Demo password: <code>{DEMO_PASSWORD}</code>
+                            </p>
+                        </div>
+                    )}
+
+                    {!MOCK_MODE && (
+                        <div className="live-api-notice">
+                            LIVE API MODE <span>·</span> Credentials are checked by the configured backend.
+                        </div>
+                    )}
+
+                    <form onSubmit={handleLogin} className="login-form">
+                        <div>
+                            <label htmlFor="username">Username or email</label>
+                            <input
+                                id="username"
+                                type="text"
+                                autoComplete="username"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
+                                placeholder="Enter your username or email"
+                                disabled={loading}
+                                required
+                            />
                         </div>
 
-                        {/* Password */}
                         <div>
-                            <label
-                                htmlFor="password"
-                                className="mb-2 block text-sm font-medium text-slate-200"
-                            >
-                                Password
-                            </label>
-
-                            <div className="flex items-center rounded-xl border border-slate-600 bg-[#142238] px-4 transition focus-within:border-emerald-400">
+                            <label htmlFor="password">Password</label>
+                            <div className="login-password-field">
                                 <input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     autoComplete="current-password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(event) => setPassword(event.target.value)}
                                     placeholder="Enter your password"
                                     disabled={loading}
-                                    className="w-full bg-transparent py-3.5 text-sm text-white outline-none placeholder:text-slate-500 disabled:opacity-60"
                                     required
                                 />
-
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="ml-2 text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                                    className="password-visibility-button"
+                                    onClick={() => {
+                                        setShowPassword((visible) => !visible);
+                                        playSound("tick");
+                                    }}
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
-                                    {showPassword ? "HIDE" : "SHOW"}
+                                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Error */}
                         {error && (
-                            <div
-                                role="alert"
-                                className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-                            >
-                                {error}
+                            <div role="alert" className="login-error">
+                                <strong>{error.includes("HTTP 502") || error.includes("HTTP 503") ? "API SERVICE UNAVAILABLE" : "SIGN-IN FAILED"}</strong>
+                                <span>{error}</span>
                             </div>
                         )}
 
-                        {/* Login button */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3.5 font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-                        >
+                        <button type="submit" className="login-submit" disabled={loading}>
                             {loading ? (
                                 <>
-                                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                    Signing in...
+                                    <span className="login-spinner" />
+                                    AUTHENTICATING…
                                 </>
                             ) : (
-                                "LOGIN"
+                                <>
+                                    <ShieldCheck size={18} />
+                                    ENTER COMMAND
+                                </>
                             )}
                         </button>
                     </form>
-                </div>
 
-                {/* Footer */}
-                <p className="mt-7 text-center text-xs text-slate-500">
-                    <span className="text-emerald-400">●</span> Secure access for
-                    authorized personnel only
-                </p>
-
-                <p className="mt-2 text-center text-xs text-slate-600">
-                    SERTOS Emergency Response Platform
-                </p>
+                    <div className="login-card-footer">
+                        <span>ROLE-BASED ACCESS CONTROL</span>
+                        <span>{MOCK_MODE ? "LOCAL DEMO DATA" : "BACKEND CONNECTED ON SIGN-IN"}</span>
+                    </div>
+                </section>
             </div>
+            <p className="login-footer">SERTOS · SMART EMERGENCY RESPONSE THROUGH OPTIMAL SELECTION</p>
         </main>
     );
 }

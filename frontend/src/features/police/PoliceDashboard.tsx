@@ -7,11 +7,16 @@ import { useLiveQuery } from "../../lib/useLiveQuery";
 type PoliceDashboardData = { incidents: Incident[]; notifications: Notification[]; traffic: PoliceTrafficOverview };
 
 function formatTime(value: string) {
-    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+    const date = new Date(value);
+    return Number.isFinite(date.getTime())
+        ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date)
+        : "Time unavailable";
 }
 
-function isRecent(value: string | null) {
-    return Boolean(value && Date.now() - Date.parse(value) < 90_000);
+function isRecent(value: string | null, referenceTime: number) {
+    if (!value) return false;
+    const age = referenceTime - Date.parse(value);
+    return Number.isFinite(age) && age >= 0 && age < 90_000;
 }
 
 export default function PoliceDashboard() {
@@ -24,28 +29,35 @@ export default function PoliceDashboard() {
         ]);
         return { incidents, notifications: notifications?.results ?? [], traffic };
     }, []);
-    const { data, loading, error, lastUpdated, refresh } = useLiveQuery(loadDashboard, 8_000);
+    const { data, loading, error, lastUpdated, refresh, isMockMode } = useLiveQuery(loadDashboard, 8_000);
     const incidents = data?.incidents ?? [];
     const activeIncidents = incidents.filter((incident) => !["CLOSED", "CANCELLED"].includes(incident.status));
+    const awaitingInitialData = loading && !data;
     const inTransit = activeIncidents.filter((incident) => incident.status === "IN_TRANSIT");
     const ambulanceCount = new Set(inTransit.map((incident) => incident.ambulance_vehicle_number).filter(Boolean)).size;
     const unacknowledged = activeIncidents.filter((incident) => !incident.police_acknowledged).length;
     const devices = data?.traffic.devices ?? [];
-    const onlineJunctions = devices.filter((device) => device.is_active && isRecent(device.last_heartbeat_at)).length;
-    const today = new Date().toDateString();
-    const resolvedToday = incidents.filter((incident) => incident.status === "CLOSED" && incident.closed_at && new Date(incident.closed_at).toDateString() === today).length;
+    const referenceTime = lastUpdated?.getTime() ?? 0;
+    const onlineJunctions = devices.filter((device) => device.is_active && isRecent(device.last_heartbeat_at, referenceTime)).length;
+    const today = lastUpdated?.toDateString();
+    const resolvedToday = incidents.filter((incident) => {
+        if (incident.status !== "CLOSED" || !incident.closed_at || !today) return false;
+        const closedAt = new Date(incident.closed_at);
+        return Number.isFinite(closedAt.getTime()) && closedAt.toDateString() === today;
+    }).length;
     const activity = (data?.notifications ?? []).slice(0, 4);
+    const apiStatusClass = error ? "tp-api-error" : data ? "tp-api-connected" : "tp-api-connecting";
 
     return (
         <div className="tp-dashboard">
-            <header className="tp-page-header"><div><div className="tp-breadcrumb">Traffic Police / Dashboard</div><h1>Operations Overview</h1><p>Live incidents, ambulance movement, and registered junction telemetry.</p></div><div className="tp-header-actions"><div className={`tp-live-indicator ${error ? "tp-api-error" : ""}`}><span />{error ? "API unavailable" : lastUpdated ? "API connected" : "Connecting"}</div><button className="tp-icon-button" type="button" onClick={refresh} aria-label="Refresh operations"><RefreshCw size={18} /></button><div className="tp-header-officer"><div className="tp-officer-avatar">TP</div><div><strong>Traffic Operations</strong><span>{lastUpdated ? `Updated ${formatTime(lastUpdated.toISOString())}` : "Awaiting backend"}</span></div></div></div></header>
+            <header className="tp-page-header"><div><div className="tp-breadcrumb">Traffic Police / Dashboard</div><h1>Operations Overview</h1><p>Live incidents, ambulance movement, and registered junction telemetry.</p></div><div className="tp-header-actions">{isMockMode && <span className="ops-demo-badge">DEMO DATA</span>}<div className={`tp-live-indicator ${apiStatusClass}`}><span />{error ? "API unavailable" : lastUpdated ? "API connected" : "Connecting"}</div><button className="tp-icon-button" type="button" onClick={refresh} aria-label="Refresh operations"><RefreshCw size={18} /></button><div className="tp-header-officer"><div className="tp-officer-avatar">TP</div><div><strong>Traffic Operations</strong><span>{lastUpdated ? `Updated ${formatTime(lastUpdated.toISOString())}` : "Awaiting backend"}</span></div></div></div></header>
             {error && <div className="tp-panel-footer tp-api-error-message" role="alert">Live refresh failed: {error}</div>}
-            <section className="tp-welcome-panel"><div className="tp-welcome-icon"><Activity size={25} /></div><div><h2>Live response coordination</h2><p>Incident and controller status refresh automatically while this page is open.</p></div><div className="tp-welcome-status"><span />{loading && !data ? "Connecting" : "Polling"}</div></section>
+            <section className="tp-welcome-panel"><div className="tp-welcome-icon"><Activity size={25} /></div><div><h2>Live response coordination</h2><p>Incident and controller status refresh automatically while this page is open.</p></div><div className={`tp-welcome-status ${apiStatusClass}`}><span />{awaitingInitialData ? "Connecting" : error ? "Feed interrupted" : "Polling"}</div></section>
 
             <section className="tp-stat-grid">
                 {[{ title: "Ambulances en route", value: ambulanceCount, detail: "Unique vehicles in transit", icon: Ambulance, color: "blue" }, { title: "Unacknowledged alerts", value: unacknowledged, detail: "Require officer review", icon: Bell, color: "orange" }, { title: "Reporting junctions", value: onlineJunctions, detail: `${devices.length} registered controllers`, icon: GitBranch, color: "green" }, { title: "Incidents closed today", value: resolvedToday, detail: "Based on recorded close time", icon: CheckCircle2, color: "purple" }].map((item) => {
                     const Icon = item.icon;
-                    return <article className="tp-stat-card" key={item.title}><div className={`tp-stat-icon tp-stat-${item.color}`}><Icon size={21} /></div><div className="tp-stat-content"><span>{item.title}</span><strong>{item.value.toString().padStart(2, "0")}</strong><small>{item.detail}</small></div><TrendingUp className="tp-stat-trend" size={17} /></article>;
+                    return <article className="tp-stat-card" key={item.title}><div className={`tp-stat-icon tp-stat-${item.color}`}><Icon size={21} /></div><div className="tp-stat-content"><span>{item.title}</span><strong>{awaitingInitialData ? "—" : item.value.toString().padStart(2, "0")}</strong><small>{item.detail}</small></div><TrendingUp className="tp-stat-trend" size={17} /></article>;
                 })}
             </section>
 

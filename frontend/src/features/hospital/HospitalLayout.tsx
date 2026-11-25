@@ -78,7 +78,7 @@ export default function HospitalLayout({
         const [profile, incidents] = await Promise.all([api.getProfile(), api.getHospitalIncidents()]);
         return { profile, incidents };
     }, []);
-    const { data: layoutData, error: connectionError } = useLiveQuery(loadLayoutData, 12_000);
+    const { data: layoutData, error: connectionError, isMockMode } = useLiveQuery(loadLayoutData, 12_000);
     const hospitalName = layoutData?.incidents[0]?.hospital_name || "Hospital Operations";
     const hospitalCode = layoutData?.incidents[0]?.hospital_code || "Assigned facility";
     const staffName = layoutData?.profile.first_name || layoutData?.profile.username || "Hospital staff";
@@ -208,6 +208,9 @@ export default function HospitalLayout({
                     </button>
 
                     <div className="hospital-topbar-right">
+                        <span className="ops-role-badge">HOSPITAL STAFF</span>
+                        {isMockMode && <span className="ops-demo-badge">DEMO DATA</span>}
+
                         <span className="hospital-status">
                             <span />
                             {connectionLabel}

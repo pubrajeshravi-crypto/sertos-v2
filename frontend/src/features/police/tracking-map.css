@@ -1,0 +1,405 @@
+.police-tracking-page {
+    display: grid;
+    grid-template-rows: auto minmax(340px, 1fr) auto;
+    gap: 14px;
+    width: 100%;
+    height: calc(100dvh - 150px);
+    min-height: 580px;
+    max-height: 1100px;
+    overflow: visible;
+    color: #e6edf5;
+}
+
+.police-tracking-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.police-tracking-header h1 {
+    color: #e6edf5;
+    font-size: 22px;
+    font-weight: 720;
+    letter-spacing: -0.02em;
+}
+
+.police-tracking-header p {
+    margin-top: 4px;
+    color: #91a1b4;
+    font-size: 12px;
+}
+
+.police-fleet-status {
+    border: 1px solid rgb(128 166 197 / 18%);
+    background: rgb(20 33 49 / 88%);
+    color: #a9bacb;
+}
+
+.police-fleet-status.online {
+    border-color: rgb(69 214 160 / 22%);
+    background: rgb(69 214 160 / 8%);
+    color: #70e0b0;
+}
+
+.police-fleet-status.pending {
+    border-color: rgb(243 187 98 / 22%);
+    background: rgb(243 187 98 / 8%);
+    color: #f3c77d;
+}
+
+.police-fleet-status.offline {
+    border-color: rgb(248 113 113 / 28%);
+    background: rgb(248 113 113 / 8%);
+    color: #ff9a9a;
+}
+
+.police-fleet-status.pending .police-live-dot {
+    background: #f3bb62;
+    box-shadow: 0 0 0 3px rgb(243 187 98 / 12%);
+}
+
+.police-fleet-status.offline .police-live-dot {
+    background: #f87171;
+    box-shadow: 0 0 0 3px rgb(248 113 113 / 12%);
+}
+
+.police-tracking-map {
+    position: relative;
+    min-height: 340px;
+    overflow: hidden;
+    border: 1px solid rgb(86 219 232 / 18%);
+    border-radius: 12px;
+    background:
+        radial-gradient(ellipse at 48% 45%, rgb(28 69 83 / 20%), transparent 62%),
+        linear-gradient(145deg, #0d1826, #09111c 68%);
+    box-shadow: inset 0 1px rgb(255 255 255 / 3%), 0 14px 36px rgb(0 0 0 / 18%);
+}
+
+.police-coordinate-map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.police-grid-line {
+    stroke: rgb(111 155 179 / 10%);
+    stroke-width: 1;
+}
+
+.police-map-axis {
+    stroke: rgb(138 172 193 / 36%);
+    stroke-width: 1;
+    stroke-dasharray: 4 5;
+}
+
+.police-map-axis-label,
+.police-map-ticks text {
+    fill: #7e94a9;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+}
+
+.police-map-ticks text {
+    fill: #9eafbf;
+    font-size: 9px;
+    letter-spacing: 0;
+}
+
+.police-map-marker {
+    cursor: pointer;
+    outline: none;
+}
+
+.police-marker-halo {
+    fill: rgb(86 219 232 / 12%);
+    stroke: rgb(86 219 232 / 30%);
+    stroke-width: 1;
+}
+
+.police-marker-core {
+    fill: #56dbe8;
+    stroke: #c5fbff;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 7px rgb(86 219 232 / 80%));
+}
+
+.police-map-marker.high .police-marker-halo {
+    fill: rgb(248 113 113 / 15%);
+    stroke: rgb(248 113 113 / 40%);
+}
+
+.police-map-marker.high .police-marker-core {
+    fill: #f87171;
+    stroke: #ffe0e0;
+    filter: drop-shadow(0 0 7px rgb(248 113 113 / 80%));
+}
+
+.police-map-marker.selected .police-marker-halo {
+    stroke: #e6edf5;
+    stroke-width: 2;
+}
+
+.police-map-marker:focus-visible .police-marker-halo {
+    stroke: #ffffff;
+    stroke-width: 3;
+}
+
+.police-map-marker text {
+    fill: #d7e5ef;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: #09111c;
+    stroke-linejoin: round;
+    stroke-width: 4px;
+}
+
+.police-map-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    width: min(360px, calc(100% - 32px));
+    padding: 18px;
+    border: 1px solid rgb(128 166 197 / 14%);
+    border-radius: 10px;
+    background: rgb(9 17 28 / 82%);
+    color: #91a1b4;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.police-map-empty svg {
+    color: #56dbe8;
+}
+
+.police-map-empty strong {
+    color: #e6edf5;
+    font-size: 13px;
+}
+
+.police-map-empty span {
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.police-map-topbar {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+}
+
+.police-map-count,
+.police-map-control {
+    border-color: rgb(128 166 197 / 20%);
+    background: rgb(10 18 29 / 90%);
+    box-shadow: 0 5px 16px rgb(0 0 0 / 20%);
+    color: #dbe7f0;
+    backdrop-filter: blur(12px);
+}
+
+.police-map-count svg {
+    color: #56dbe8;
+}
+
+.police-map-control:hover:not(:disabled) {
+    border-color: rgb(86 219 232 / 40%);
+    background: #142131;
+}
+
+.police-map-control:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.police-selected-panel {
+    top: 62px;
+    right: 12px;
+    width: min(310px, calc(100% - 24px));
+    border-color: rgb(86 219 232 / 22%);
+    background: rgb(10 18 29 / 93%);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 34%);
+    color: #e6edf5;
+}
+
+.police-selected-label {
+    color: #91a1b4;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    letter-spacing: 0.1em;
+}
+
+.police-selected-header h2,
+.police-selected-details strong {
+    color: #e6edf5;
+}
+
+.police-selected-condition {
+    border: 1px solid rgb(243 187 98 / 16%);
+    background: rgb(243 187 98 / 8%);
+    color: #f3c77d;
+}
+
+.police-selected-details span {
+    color: #91a1b4;
+}
+
+.police-selected-details .police-high-text {
+    color: #ff9a9a;
+}
+
+.police-selected-details .police-normal-text {
+    color: #56dbe8;
+}
+
+.police-selected-destination {
+    border-top-color: rgb(128 166 197 / 16%);
+    color: #b6c4d2;
+}
+
+.police-selected-coordinates {
+    margin: -2px 0 0 22px;
+    color: #56dbe8;
+    font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.police-map-footer {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+}
+
+.police-map-footer span {
+    border: 1px solid rgb(128 166 197 / 15%);
+    background: rgb(10 18 29 / 88%);
+    color: #aab9c7;
+    backdrop-filter: blur(10px);
+}
+
+.police-fleet-panel {
+    padding: 14px;
+    border: 1px solid rgb(128 166 197 / 15%);
+    border-radius: 11px;
+    background: linear-gradient(150deg, rgb(18 29 44 / 94%), rgb(12 20 32 / 96%));
+    box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+    color: #e6edf5;
+}
+
+.police-fleet-heading h2 {
+    color: #e6edf5;
+    font-size: 13px;
+}
+
+.police-fleet-heading p,
+.police-fleet-heading > span {
+    color: #91a1b4;
+}
+
+.police-fleet-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 8px;
+}
+
+.police-fleet-item {
+    min-width: 0;
+    border: 1px solid rgb(128 166 197 / 14%);
+    border-radius: 8px;
+    background: rgb(8 14 23 / 62%);
+    color: #e6edf5;
+}
+
+.police-fleet-item:hover,
+.police-fleet-item.selected {
+    border-color: rgb(86 219 232 / 36%);
+    background: rgb(86 219 232 / 7%);
+}
+
+.police-fleet-icon {
+    background: rgb(86 219 232 / 9%);
+    color: #56dbe8;
+}
+
+.police-fleet-info strong,
+.police-fleet-meta strong {
+    color: #e6edf5;
+}
+
+.police-fleet-info span,
+.police-fleet-meta span {
+    color: #91a1b4;
+}
+
+.police-tracking-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    width: max-content;
+    padding: 7px 10px;
+    border: 1px solid rgb(128 166 197 / 17%);
+    border-radius: 7px;
+    background: rgb(20 33 49 / 85%);
+    color: #b6c4d2;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.police-tracking-refresh:hover {
+    border-color: rgb(86 219 232 / 35%);
+    color: #8de7ed;
+}
+
+.police-tracking-page .tp-action-error {
+    margin: 0;
+    border-color: rgb(248 113 113 / 32%);
+    background: rgb(127 29 29 / 18%);
+    color: #ffb2b2;
+}
+
+@media (max-width: 760px) {
+    .police-tracking-page {
+        display: flex;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        flex-direction: column;
+    }
+
+    .police-tracking-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .police-tracking-map {
+        flex: none;
+        height: 470px;
+        min-height: 470px;
+    }
+
+    .police-selected-panel {
+        top: 58px;
+        right: 8px;
+        width: min(270px, calc(100% - 16px));
+        padding: 11px;
+    }
+
+    .police-fleet-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 420px) {
+    .police-map-footer span:first-child {
+        display: none;
+    }
+
+    .police-map-footer {
+        justify-content: flex-end;
+    }
+}

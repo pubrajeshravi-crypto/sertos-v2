@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const isMockMode = import.meta.env.VITE_USE_MOCKS === "true";
+
 export function useLiveQuery<T>(loader: () => Promise<T>, intervalMs = 10_000) {
   const loaderRef = useRef(loader);
   const [data, setData] = useState<T>();
@@ -35,7 +37,7 @@ export function useLiveQuery<T>(loader: () => Promise<T>, intervalMs = 10_000) {
         requestInFlight = false;
         if (active) {
           setLoading(false);
-          timer = window.setTimeout(poll, intervalMs);
+          timer = window.setTimeout(poll, isMockMode ? Math.min(intervalMs, 5_000) : intervalMs);
         }
       }
     };
@@ -48,5 +50,5 @@ export function useLiveQuery<T>(loader: () => Promise<T>, intervalMs = 10_000) {
     };
   }, [intervalMs, refreshCount]);
 
-  return { data, loading, error, lastUpdated, refresh };
+  return { data, loading, error, lastUpdated, refresh, isMockMode };
 }

@@ -161,17 +161,27 @@ export default function TrafficPoliceLayout({
 
             {/* Main Content */}
             <main className="tp-main">
-
-                {/* Hamburger Button */}
-                <button
-                    className="tp-menu-button"
-                    type="button"
-                    onClick={() => setSidebarOpen(true)}
-                    aria-label="Open navigation menu"
-                    aria-expanded={sidebarOpen}
-                >
-                    <Menu size={24} />
-                </button>
+                <header className="ops-command-bar">
+                    <button
+                        className="tp-menu-button"
+                        type="button"
+                        onClick={() => setSidebarOpen(true)}
+                        aria-label="Open navigation menu"
+                        aria-expanded={sidebarOpen}
+                    >
+                        <Menu size={21} />
+                    </button>
+                    <div className="ops-command-label">
+                        <span className="ops-health-dot" />
+                        <span>SERTOS</span>
+                        <strong>COMMAND NETWORK</strong>
+                    </div>
+                    <div className="ops-command-meta">
+                        <span className="ops-role-badge">POLICE DISPATCH</span>
+                        {import.meta.env.VITE_USE_MOCKS === "true" && <span className="ops-demo-badge">DEMO DATA</span>}
+                        <span className="ops-secure-label">RBAC / ENABLED</span>
+                    </div>
+                </header>
 
                 <div className="tp-main-content">
                     {children}

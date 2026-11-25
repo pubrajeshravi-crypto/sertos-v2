@@ -1,5 +1,8 @@
+import { MockApiError, mockRequest } from "../mocks/mockApi";
+
 // Prefer same-origin requests. Vite proxies /api locally and Vercel forwards
 // /api to the configured backend, so a browser never tries its own localhost.
+export const MOCK_MODE = import.meta.env.VITE_USE_MOCKS === "true";
 const configuredApiBaseUrl =
   (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 const pointsToLocalMachine = /^https?:\/\/(localhost|127(?:\.\d{1,3}){3}|\[::1\])(?::\d+)?$/i.test(configuredApiBaseUrl);
@@ -41,6 +44,17 @@ async function request<T>(
   options: RequestInit = {},
   canRefresh = true,
 ): Promise<T> {
+  if (MOCK_MODE) {
+    try {
+      return await mockRequest<T>(path, options);
+    } catch (reason) {
+      if (reason instanceof MockApiError) {
+        throw new ApiError(reason.message, reason.status);
+      }
+      throw reason;
+    }
+  }
+
   const accessToken = localStorage.getItem("sertos_access_token");
   let response: Response;
   try {
@@ -199,6 +213,55 @@ export type RouteSummary = {
   estimated_arrival: string;
   polyline?: string;
 };
+
+export type IncidentLocation = {
+  latitude: string;
+  longitude: string;
+  recorded_at: string;
+};
+
+function parseIncidentLocation(value: unknown): IncidentLocation | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const latitudeValue = record.latitude;
+  const longitudeValue = record.longitude;
+  const recordedAt = record.recorded_at;
+  const hasCoordinate = (coordinate: unknown) =>
+    typeof coordinate === "number" ||
+    (typeof coordinate === "string" && coordinate.trim() !== "");
+
+  if (
+    !hasCoordinate(latitudeValue) ||
+    !hasCoordinate(longitudeValue) ||
+    typeof recordedAt !== "string" ||
+    !recordedAt.trim()
+  ) {
+    return null;
+  }
+
+  const latitude = Number(latitudeValue);
+  const longitude = Number(longitudeValue);
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180 ||
+    !Number.isFinite(Date.parse(recordedAt))
+  ) {
+    return null;
+  }
+
+  return {
+    latitude: String(latitude),
+    longitude: String(longitude),
+    recorded_at: recordedAt,
+  };
+}
 
 export type HospitalBed = {
   id: string;
@@ -388,12 +451,10 @@ export const api = {
     request<{ updated_count: number }>("/api/notifications/read-all/", {
       method: "PATCH",
     }),
-  getLocation: (incidentId: string) =>
-    request<{
-      latitude: string;
-      longitude: string;
-      recorded_at: string;
-    } | null>(`/api/emergencies/${incidentId}/location/`),
+  getLocation: async (incidentId: string) => {
+    const location = await request<unknown>(`/api/emergencies/${incidentId}/location/`);
+    return parseIncidentLocation(location);
+  },
   logout: (refresh: string) =>
     request("/api/auth/logout/", {
       method: "POST",

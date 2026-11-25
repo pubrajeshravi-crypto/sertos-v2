@@ -22,6 +22,7 @@ import DriverNotifications from './DriverNotifications'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { api, type Incident } from '../../lib/api'
 import { clearSession, getSession } from '../../lib/auth'
+import { playSound } from '../../lib/sound'
 // ==============================
 // TYPES
 // ==============================
@@ -439,6 +440,7 @@ function DriverPage() {
 
         // Driver presses STOP
         if (listening) {
+            playSound('tick')
             manualStopRef.current = true
             setListening(false)
 
@@ -455,6 +457,7 @@ function DriverPage() {
             speechWindow.webkitSpeechRecognition
 
         if (!SpeechRecognition) {
+            playSound('error')
             setVoiceMessage(
                 'Voice recognition is not supported. Please use Google Chrome.'
             )
@@ -475,6 +478,7 @@ function DriverPage() {
         setPatientReport('')
         setShowDetails(false)
         setListening(true)
+        playSound('tick')
 
         recognition.onresult = (event) => {
 
@@ -504,6 +508,7 @@ function DriverPage() {
         recognition.onerror = (event) => {
 
             console.error('Speech recognition error:', event)
+            playSound('error')
 
             manualStopRef.current = true
             setListening(false)
@@ -523,6 +528,7 @@ function DriverPage() {
                 const report = patientReportRef.current.trim()
 
                 if (!report) {
+                    playSound('error')
                     setVoiceMessage(
                         'No speech detected. Please record the patient report again.'
                     )
@@ -532,6 +538,7 @@ function DriverPage() {
                 setPatientReport(report)
 
                 setVoiceMessage('Voice report captured successfully.')
+                playSound('success')
 
                 navigate('/driver/confirmation', {
                     state: {
@@ -596,10 +603,13 @@ function DriverPage() {
             hospitalETA="-- min"
             destination={activeIncident?.hospital_name || activeIncident?.hospital?.name || 'No destination assigned'}
             gpsStatus={gpsStatus}
+            gpsDetected={Boolean(lastGpsUpdate)}
+            hospitalAssigned={Boolean(activeIncident?.hospital_name || activeIncident?.hospital?.name)}
+            policeAcknowledged={Boolean(activeIncident?.police_acknowledged)}
             emergencyStatus={activeIncident?.status_display || activeIncident?.status || 'READY'}
             trafficStatus={activeIncident?.police_acknowledged ? 'Police acknowledged' : activeIncident ? 'Awaiting coordination' : 'No active incident'}
             onTrafficClick={() => setActiveTab('route')}
-            onStartEmergency={() => setVoiceMessage('Record the patient report, then confirm the emergency to send it to dispatch.')}
+            onStartEmergency={startVoiceReport}
             onNotificationClick={() => setNotificationsOpen(true)}
         />
     }
@@ -628,7 +638,7 @@ function DriverPage() {
     // ==============================
 
     const renderProfile = () => (
-        <section className="space-y-4 pb-5">
+        <section className="driver-profile space-y-4 pb-5">
 
             {/* Profile Heading */}
 
@@ -875,37 +885,37 @@ function DriverPage() {
 
     return (
 
-        <div className="min-h-screen bg-slate-50 text-slate-900 pb-28">
+        <div className="driver-app min-h-screen pb-28">
 
             {/* HEADER */}
 
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+            <header className="driver-header sticky top-0 z-30 border-b">
 
                 <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
 
                     <div className="flex items-center gap-2.5">
 
-                        <div className="bg-red-600 text-white p-2 rounded-xl">
+                        <div className="driver-brand-icon p-2 rounded-xl">
                             <Ambulance size={22} />
                         </div>
 
                         <div>
-                            <h1 className="text-lg font-extrabold tracking-tight">
+                            <h1 className="text-command-text text-lg font-extrabold tracking-tight">
                                 SERTOS
                             </h1>
 
-                            <p className="text-[10px] text-slate-500">
+                            <p className="text-command-muted text-[10px]">
                                 DRIVER APPLICATION
                             </p>
                         </div>
 
                     </div>
 
-                    <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-full">
+                    <div className="driver-connectivity flex items-center gap-2 px-3 py-2 rounded-full">
 
-                        <Wifi size={14} className="text-green-600" />
+                        <Wifi size={14} />
 
-                        <span className="text-[11px] font-bold text-green-700">
+                        <span className="text-[11px] font-bold">
                             ONLINE
                         </span>
 
@@ -1033,7 +1043,7 @@ function DriverPage() {
 
             {/* BOTTOM NAVIGATION */}
 
-            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40">
+            <nav className="driver-bottom-nav fixed bottom-0 left-0 right-0 z-40 border-t">
 
                 <div className="max-w-lg mx-auto px-3 h-[76px] flex items-center justify-around">
 
@@ -1042,8 +1052,8 @@ function DriverPage() {
                     <button
                         onClick={() => setActiveTab('home')}
                         className={`flex flex-col items-center gap-1 w-16 ${activeTab === 'home'
-                            ? 'text-red-600'
-                            : 'text-slate-400'
+                            ? 'text-command-emerald'
+                            : 'text-command-muted'
                             }`}
                     >
                         <House size={21} />
@@ -1058,8 +1068,8 @@ function DriverPage() {
                     <button
                         onClick={() => setActiveTab('route')}
                         className={`flex flex-col items-center gap-1 w-16 ${activeTab === 'route'
-                            ? 'text-red-600'
-                            : 'text-slate-400'
+                            ? 'text-command-emerald'
+                            : 'text-command-muted'
                             }`}
                     >
                         <Route size={21} />
@@ -1094,8 +1104,8 @@ function DriverPage() {
                     <button
                         onClick={() => setActiveTab('profile')}
                         className={`flex flex-col items-center gap-1 w-16 ${activeTab === 'profile'
-                            ? 'text-red-600'
-                            : 'text-slate-400'
+                            ? 'text-command-emerald'
+                            : 'text-command-muted'
                             }`}
                     >
                         <UserRound size={21} />
